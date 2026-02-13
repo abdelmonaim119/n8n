@@ -1,0 +1,895 @@
+{
+  "id": "vJ7KB2yFahZGhW51",
+  "name": "Integrate Outlook + Otter → Monday.com (transcribe, summarize, create/update tasks)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "value": 5
+            }
+          ]
+        }
+      },
+      "name": "Every 5 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        160,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": true,
+        "options": {
+          "onlyUnread": true
+        }
+      },
+      "name": "Get Outlook Emails",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 1,
+      "position": [
+        480,
+        80
+      ],
+      "credentials": {
+        "microsoftOutlookOAuth2": {
+          "id": "OUTLOOK_OAUTH_CRED",
+          "name": "Outlook OAuth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => i);"
+      },
+      "name": "Split emails",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [
+        720,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const\tmsg = item.json;\n// Normalize fields\nitem.json.source = 'outlook';\nitem.json.source_id = msg.id || msg.messageId || msg['Message-Id'] || null;\nitem.json.subject = msg.subject || '';\nitem.json.bodyText = (msg.body && (msg.body.content || msg.body.value)) || '';\nitem.json.senderEmail = (msg.from && (msg.from.emailAddress?.address || msg.from.address)) || (msg.sender?.emailAddress?.address) || '';\n\n// Try extract due date (YYYY-MM-DD or phrases like \"due on 2026-02-20\" or \"due tomorrow\")\nconst body = item.json.bodyText || '';\nlet due = null;\nconst isoMatch = body.match(/(\\d{4}-\\d{2}-\\d{2})/);\nif(isoMatch){ due = isoMatch[1]; }\nelse{\n  const dueOn = body.match(/due on (\\w+ \\d{1,2}, \\d{4})/i);\n  if(dueOn) due = new Date(dueOn[1]).toISOString().substr(0,10);\n}\nitem.json.extracted_due = due || null;\n\n// Default due if not found: +2 days\nif(!item.json.extracted_due){\n  const d = new Date();\n  d.setDate(d.getDate()+2);\n  item.json.extracted_due = d.toISOString().substr(0,10);\n}\n\n// Task title & description\nitem.json.task_title = item.json.subject || ('Email from ' + item.json.senderEmail);\nitem.json.task_description = item.json.bodyText || '';\n\nreturn item;"
+      },
+      "name": "Parse Email -> Task",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.monday.com/v2",
+        "options": {
+          "responseFormat": "json",
+          "jsonParameters": true
+        },
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "query",
+              "value": "query ($boardId: Int!, $columnId: String!, $value: String!) { items_by_column_values (board_id: $boardId, column_id: $columnId, column_value: $value) { id name column_values { id text } } }"
+            },
+            {
+              "name": "variables",
+              "value": "{\"boardId\": {{ $json.boardId || 0 }}, \"columnId\": \"source_id\", \"value\": \"={{$json.source_id}}\"}"
+            }
+          ]
+        },
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$credentials.mondayApi.apiToken}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "name": "Monday - Find item by source_id",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        80
+      ],
+      "credentials": {
+        "mondayApi": {
+          "id": "MONDAY_API_CRED",
+          "name": "Monday.com API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.data && $json.data.items_by_column_values && $json.data.items_by_column_values.length > 0 }}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "name": "Item exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "mutation",
+        "url": "https://api.monday.com/v2",
+        "bodyParametersJson": "mutation ($itemId: Int!, $updates: JSON!) { change_multiple_column_values(item_id: $itemId, board_id: {{ $json.boardId || 0 }}, column_values: $updates) { id } }",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$credentials.mondayApi.apiToken}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "responseFormat": "json",
+          "jsonParameters": true
+        }
+      },
+      "name": "Monday - Update item",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        40
+      ],
+      "credentials": {
+        "mondayApi": {
+          "id": "MONDAY_API_CRED",
+          "name": "Monday.com API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "mutation",
+        "url": "https://api.monday.com/v2",
+        "bodyParametersJson": "mutation ($boardId: Int!, $itemName: String!, $columnValues: JSON!) { create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) { id } }",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$credentials.mondayApi.apiToken}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "responseFormat": "json",
+          "jsonParameters": true
+        }
+      },
+      "name": "Monday - Create item",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        160
+      ],
+      "credentials": {
+        "mondayApi": {
+          "id": "MONDAY_API_CRED",
+          "name": "Monday.com API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "passThrough",
+        "values": {
+          "boolean": [],
+          "number": [],
+          "string": [
+            {
+              "name": "retry_count",
+              "value": "0"
+            }
+          ]
+        }
+      },
+      "name": "Init retry counter",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.retry_count || 0 }}",
+              "operation": "less",
+              "value2": 3
+            }
+          ]
+        }
+      },
+      "name": "Should retry?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "passThrough",
+        "values": {
+          "number": [
+            {
+              "name": "retry_count",
+              "value": "={{ ($json.retry_count || 0) + 1 }}"
+            }
+          ]
+        }
+      },
+      "name": "Increment retry",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 60,
+        "unit": "seconds"
+      },
+      "name": "Wait 60s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "get",
+        "messageId": "={{ $json.source_id }}",
+        "simple": true
+      },
+      "name": "Get Outlook Message Details",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        -80
+      ],
+      "credentials": {
+        "microsoftOutlookOAuth2": {
+          "id": "OUTLOOK_OAUTH_CRED",
+          "name": "Outlook OAuth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheets",
+        "operation": "append",
+        "documentId": "={{ $json.logSheetId || '' }}",
+        "range": "Sheet1",
+        "options": {}
+      },
+      "name": "Log error to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        320
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.otter.ai/v1/records",
+        "options": {
+          "responseFormat": "json",
+          "jsonParameters": false
+        },
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$credentials.otterApi.apiKey}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "bodyParametersUi": {
+          "parameter": []
+        }
+      },
+      "name": "Otter.ai - List recordings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        480,
+        400
+      ],
+      "credentials": {
+        "otterApi": {
+          "id": "OTTER_API_CRED",
+          "name": "Otter.ai API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => i);"
+      },
+      "name": "Split recordings",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [
+        720,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "item.json.source = 'otter';\nitem.json.source_id = item.json.id || item.json.recording_id || item.json.recordId || null;\nitem.json.audio_url = item.json.audio_url || item.json.mediaUrl || item.json.downloadUrl || null;\nreturn item;"
+      },
+      "name": "Normalize recording",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "download": true,
+        "url": "={{$json.audio_url}}",
+        "responseFormat": "file"
+      },
+      "name": "Download audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1240,
+        400
+      ],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/audio/transcriptions",
+        "options": {
+          "binaryData": true,
+          "binaryPropertyName": "data",
+          "responseFormat": "json"
+        },
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$credentials.openaiApi.apiKey}}"
+            }
+          ]
+        },
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "model",
+              "value": "whisper-1"
+            }
+          ]
+        }
+      },
+      "name": "Whisper Transcribe",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        400
+      ],
+      "credentials": {
+        "openaiApi": {
+          "id": "OPENAI_API_CRED",
+          "name": "OpenAI API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const transcript = $json.text || $json.transcript || $json.data?.text || '';\nitem.json.transcription = transcript;\n// Create prompt for summarization + actions\nconst prompt = `You are an assistant. Produce a concise summary (2-3 lines) and a bullet list of action items (each 1 short sentence) from this transcript:\n\n${transcript}`;\nitem.json.openai_prompt = prompt;\nreturn item;"
+      },
+      "name": "Prepare summary prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "options": {
+          "responseFormat": "json",
+          "jsonParameters": true
+        },
+        "bodyParametersJson": "{\"model\":\"gpt-4o-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"{{ $json.openai_prompt }}\"}],\"max_tokens\":400}",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$credentials.openaiApi.apiKey}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "name": "OpenAI - Summarize & Actions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        400
+      ],
+      "credentials": {
+        "openaiApi": {
+          "id": "OPENAI_API_CRED",
+          "name": "OpenAI API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const content = $json.choices?.[0]?.message?.content || $json.choices?.[0]?.text || '';\n// Split summary (first paragraph) and actions (bullets)\nconst parts = content.split('\n\n');\nitem.json.summary = parts[0] || content;\nitem.json.actions = parts.slice(1).join('\n\n') || '';\n// Title = first 5 words of summary\nconst first5 = (item.json.summary || '').split(/\\s+/).slice(0,5).join(' ');\nitem.json.task_title = `Voice Note: ${first5}`;\nitem.json.task_description = (item.json.transcription || '') + '\\n\\nSummary:\\n' + item.json.summary;\nitem.json.follow_up_required = (item.json.actions && item.json.actions.length>10) ? 'Yes' : 'No';\nreturn item;"
+      },
+      "name": "Extract summary & actions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.monday.com/v2",
+        "options": {
+          "responseFormat": "json",
+          "jsonParameters": true
+        },
+        "bodyParametersJson": "query ($boardId: Int!, $columnId: String!, $value: String!) { items_by_column_values(board_id: $boardId, column_id: $columnId, column_value: $value) { id } }",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$credentials.mondayApi.apiToken}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "name": "Monday - Find recording item",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        2480,
+        400
+      ],
+      "credentials": {
+        "mondayApi": {
+          "id": "MONDAY_API_CRED",
+          "name": "Monday.com API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "mutation",
+        "url": "https://api.monday.com/v2",
+        "bodyParametersJson": "mutation ($boardId: Int!, $itemName: String!, $columnValues: JSON!) { create_item(board_id: $boardId, item_name: $itemName, column_values: $columnValues) { id } }",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$credentials.mondayApi.apiToken}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "responseFormat": "json",
+          "jsonParameters": true
+        }
+      },
+      "name": "Monday - Create recording item",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        2720,
+        400
+      ],
+      "credentials": {
+        "mondayApi": {
+          "id": "MONDAY_API_CRED",
+          "name": "Monday.com API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "mutation",
+        "url": "https://api.monday.com/v2",
+        "bodyParametersJson": "mutation ($itemId: Int!, $updates: JSON!) { change_multiple_column_values(item_id: $itemId, board_id: {{ $json.boardId || 0 }}, column_values: $updates) { id } }",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$credentials.mondayApi.apiToken}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "responseFormat": "json",
+          "jsonParameters": true
+        }
+      },
+      "name": "Monday - Update recording item",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        2720,
+        520
+      ],
+      "credentials": {
+        "mondayApi": {
+          "id": "MONDAY_API_CRED",
+          "name": "Monday.com API Token"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 5 minutes": {
+      "main": [
+        [
+          {
+            "node": "Get Outlook Emails",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Otter.ai - List recordings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Outlook Emails": {
+      "main": [
+        [
+          {
+            "node": "Split emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split emails": {
+      "main": [
+        [
+          {
+            "node": "Parse Email -> Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Email -> Task": {
+      "main": [
+        [
+          {
+            "node": "Monday - Find item by source_id",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Init retry counter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monday - Find item by source_id": {
+      "main": [
+        [
+          {
+            "node": "Item exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Item exists?": {
+      "main": [
+        [
+          {
+            "node": "Monday - Update item",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Monday - Create item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monday - Update item": {
+      "main": [
+        [
+          {
+            "node": "Should retry?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monday - Create item": {
+      "main": [
+        [
+          {
+            "node": "Should retry?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init retry counter": {
+      "main": [
+        [
+          {
+            "node": "Should retry?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should retry?": {
+      "main": [
+        [
+          {
+            "node": "Increment retry",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log error to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Increment retry": {
+      "main": [
+        [
+          {
+            "node": "Wait 60s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 60s": {
+      "main": [
+        [
+          {
+            "node": "Monday - Find item by source_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Otter.ai - List recordings": {
+      "main": [
+        [
+          {
+            "node": "Split recordings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split recordings": {
+      "main": [
+        [
+          {
+            "node": "Normalize recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize recording": {
+      "main": [
+        [
+          {
+            "node": "Monday - Find recording item",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download audio": {
+      "main": [
+        [
+          {
+            "node": "Whisper Transcribe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Whisper Transcribe": {
+      "main": [
+        [
+          {
+            "node": "Prepare summary prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare summary prompt": {
+      "main": [
+        [
+          {
+            "node": "OpenAI - Summarize & Actions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Summarize & Actions": {
+      "main": [
+        [
+          {
+            "node": "Extract summary & actions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract summary & actions": {
+      "main": [
+        [
+          {
+            "node": "Monday - Find recording item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monday - Find recording item": {
+      "main": [
+        [
+          {
+            "node": "Monday - Create recording item",
+            "type": "main",
+            "index": 0
+          },
+          [
+            {
+              "node": "Monday - Update recording item",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      ]
+    },
+    "Monday - Create recording item": {
+      "main": [
+        []
+      ]
+    },
+    "Monday - Update recording item": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "isArchived": false
+}
