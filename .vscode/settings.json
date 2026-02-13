@@ -1,0 +1,8 @@
+{
+    "n8n.host": "http://localhost:5679",
+    "n8n.apiKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNDg0NDgzNy04NzQ1LTQyYWQtOTMxMi1jNWQyN2RlNzAwYjIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzcwOTc1NTc3LCJleHAiOjE3NzM1MjkyMDB9.-T6prZMdlhRoPs1A6JewhNboXzcpYjD8kqof4eUV8Q8",
+    "n8n.syncFolder": "workflows",
+    "n8n.syncMode": "auto",
+    "n8n.projectId": "AbL0oEXcD3fRF7GZ",
+    "n8n.projectName": "Personal"
+}

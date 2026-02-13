@@ -1,0 +1,118 @@
+{
+  "id": "cj2HwrHqAMKY9t9z",
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "name": "When chat message received",
+      "webhookId": "8c56152e-2493-499e-bae7-6b6e0af0f1b9"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "use mcp tool for answer questions there any many tools will helping you for achive coorect answer",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "vaZCwRniesT7CJEy",
+          "name": "Google Gemini(PaLM) Api Monaimkali59"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://coruscant-lorina-iliac.ngrok-free.dev/mcp-test/861f36be-9f44-4094-a8ff-262f9df71348",
+        "serverTransport": "sse",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        224
+      ],
+      "name": "MCP Client"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [
+    {
+      "updatedAt": "2025-12-10T10:15:39.683Z",
+      "createdAt": "2025-12-10T10:15:39.683Z",
+      "id": "rzPQEdzSJdmFrmBG",
+      "name": "clickUp"
+    }
+  ],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

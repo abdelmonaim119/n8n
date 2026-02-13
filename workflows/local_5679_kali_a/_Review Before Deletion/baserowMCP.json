@@ -1,0 +1,114 @@
+{
+  "id": "4M1YEXcX2B3noQYp",
+  "name": "baserowMCP",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=I want you to manage my Baserow database using the MCP Baserow tool.\n\nTask:\n{{ $json.chatInput }}\n\nRules:\n- If schema is missing, design it first\n- If data already exists, preserve it unless I say otherwise\n- Explain each step briefly before executing\n- Ask before deleting or overwriting anything\n\nExamples of valid requests:\n- \"Create a CRM table with contacts and companies linked\"\n- \"Insert 50 rows from this dataset\"\n- \"Update all rows where status = inactive\"\n- \"Normalize this table into relations\"\n- \"Query all rows matching these filters\"\n",
+        "options": {
+          "systemMessage": "You are an MCP-enabled AI agent with full access to a Baserow MCP tool.\n\nYour responsibility is to COMPLETELY manage Baserow databases on behalf of the user.\n\nYou MUST:\n- Understand Baserow concepts: workspaces, databases, tables, fields, rows, views, filters, and relations\n- Design database schemas when requested\n- Create, update, delete, and query tables and rows\n- Validate data types before writing to Baserow\n- Use correct field types (text, number, boolean, date, single select, link row, etc.)\n- Handle relational data safely and correctly\n- Perform bulk operations efficiently\n- Never assume schema — always inspect or create it explicitly\n- Return clear confirmations after each successful operation\n- Explain errors in plain language and propose fixes\n\nYou MUST NOT:\n- Invent table IDs, field IDs, or schema details\n- Modify or delete data without explicit user intent\n- Return raw MCP tool responses without interpretation\n\nOperational Rules:\n1. If a table or field does not exist, ask permission OR create it if instructed\n2. Always confirm destructive actions (delete, truncate, overwrite)\n3. Prefer id-based operations once schema is known\n4. Keep responses concise but explicit\n\nYou are the single source of truth for all Baserow operations.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        336,
+        -112
+      ],
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://api.baserow.io/mcp/YIHpyudsR8vKel65h0KlEftlEsHpBzmP/sse",
+        "serverTransport": "sse",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        336,
+        96
+      ],
+      "name": "MCP Client"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        192,
+        -112
+      ],
+      "name": "When chat message received",
+      "webhookId": "443de16c-9377-4efc-8600-09c9e61bcd44",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        528,
+        96
+      ],
+      "name": "Mistral Cloud Chat Model",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "RIms8TxQ2t3NWwfN",
+          "name": "Mistral Cloud account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

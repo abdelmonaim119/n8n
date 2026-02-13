@@ -1,0 +1,131 @@
+{
+  "id": "bCcPHN4nKI79VR3A",
+  "name": "Extract - YouTube - Content Ideas Dataset",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nExtracts YouTube video/topic data for idea and lead research.\n\nTrigger:\nManual trigger.\n\nProcess Summary:\n- Run Apify actor for source collection.\n- Fetch generated dataset items.\n- Pull video metadata for analysis.\n\nOutput:\nResearch-ready idea dataset from YouTube sources.\n\nOwner:\nGrowth Research",
+        "height": 380,
+        "width": 620,
+        "color": 7
+      },
+      "id": "workflow-overview-note",
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        -400
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "actorId": {
+          "__rl": true,
+          "value": "NtMTjlvWvFlAEAcgc",
+          "mode": "list",
+          "cachedResultName": "YouTube Transcript Fetcher (crawlmaster/youtube-transcript-fetcher)",
+          "cachedResultUrl": "https://console.apify.com/actors/NtMTjlvWvFlAEAcgc/input"
+        },
+        "customBody": "{\n\"url\":\"https://www.youtube.com/watch?v=Fqeo8q8-nJg&t=299s\"\n}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "name": "Run an Actor",
+      "credentials": {
+        "apifyApi": {
+          "id": "n1bLRl9m2QbK3vnh",
+          "name": "Apify account monaimK9"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Datasets",
+        "datasetId": "={{ $json.defaultDatasetId }}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        336,
+        0
+      ],
+      "name": "Get dataset items",
+      "credentials": {
+        "apifyApi": {
+          "id": "n1bLRl9m2QbK3vnh",
+          "name": "Apify account monaimK9"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "get",
+        "videoId": "Fqeo8q8-nJg&t=299s",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        464,
+        48
+      ],
+      "name": "Get a video"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Run an Actor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run an Actor": {
+      "main": [
+        [
+          {
+            "node": "Get dataset items",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

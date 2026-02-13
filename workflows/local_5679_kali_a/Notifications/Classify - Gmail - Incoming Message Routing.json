@@ -1,0 +1,379 @@
+{
+  "id": "LjZDgg4RbQLe7ZWT",
+  "name": "Classify - Gmail - Incoming Message Routing",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nClassifies incoming emails and routes or labels them automatically.\n\nTrigger:\nGmail Trigger.\n\nProcess Summary:\n- Read new incoming email.\n- Classify message intent using AI classifier.\n- Apply category-specific Gmail actions.\n- Delete or route low-value messages.\n\nOutput:\nInbox triage actions executed per category.\n\nOwner:\nFounder Inbox Management",
+        "height": 380,
+        "width": 620,
+        "color": 7
+      },
+      "id": "workflow-overview-note",
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -780,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -80,
+        320
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_4718728674590066002"
+        ]
+      },
+      "name": "Sponsorship",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        544,
+        112
+      ],
+      "webhookId": "0937c24f-a2d2-44c6-8889-c81ac23c054c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_5534881153967580138"
+        ]
+      },
+      "name": "Collaboration",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        544,
+        272
+      ],
+      "webhookId": "fefa401a-080a-4cb1-b571-8ca619a5e341",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_1639034215099811028"
+        ]
+      },
+      "name": "Business Inquiries",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        544,
+        432
+      ],
+      "webhookId": "4eba31fd-cc5d-4adc-b62d-3f9c349a1546",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_8192021164404398339"
+        ]
+      },
+      "name": "Others",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        544,
+        592
+      ],
+      "webhookId": "721cb2a0-69f8-4a07-a589-77d75d306c07",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## I'm your personal email AI Labeling Agent :)\n\n### I will organize your inbox by labeling all incoming emails into predefined labels to save you time. ",
+        "height": 1056,
+        "width": 407,
+        "color": 5
+      },
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.text }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "Sponsorship",
+              "description": "Emails that offer or inquire about sponsorship deals for the YouTube channel, including potential sponsors wanting to advertise or collaborate on content."
+            },
+            {
+              "category": "Collaboration",
+              "description": "Emails from AI companies or related businesses that are interested in collaborating on projects, tutorials, or content creation for the channel."
+            },
+            {
+              "category": "Business Inquiries",
+              "description": "Emails that pertain to general business-related topics not specifically related to sponsorship or collaboration, such as inquiries about the channel, requests for information, or other miscellaneous business communications."
+            },
+            {
+              "category": "Others",
+              "description": "All others emails that do not match the description of previous labels. "
+            },
+            {
+              "category": "Upwork email",
+              "description": "Emails originating from Upwork, including job invitations, client messages, project updates, contract details, or any communication related to hiring or freelance work on the Upwork platform."
+            },
+            {
+              "category": "AliExpress Email",
+              "description": "Emails related to AliExpress, including order confirmations, shipping updates, product notifications, promotional messages, dispute communications, or any other correspondence originating from or concerning AliExpress."
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "=Please classify the text provided by the user into one of the following categories: {categories}, and use the provided formatting instructions below. Don't explain, and only output the json."
+        }
+      },
+      "name": "Labeling AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1,
+      "position": [
+        112,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        48,
+        720
+      ],
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "vaZCwRniesT7CJEy",
+          "name": "Google Gemini(PaLM) Api Monaimkali59"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "messageId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        784,
+        112
+      ],
+      "name": "Delete a message",
+      "webhookId": "55cd3c00-b33c-4109-92dc-593b8da61a2a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_9181167723549707514"
+        ]
+      },
+      "name": "Upwork",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        544,
+        768
+      ],
+      "webhookId": "721cb2a0-69f8-4a07-a589-77d75d306c07",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "messageId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        544,
+        960
+      ],
+      "name": "delete ALiexpress",
+      "webhookId": "55cd3c00-b33c-4109-92dc-593b8da61a2a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Labeling AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Labeling AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Sponsorship",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Collaboration",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Business Inquiries",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Others",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Upwork",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "delete ALiexpress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Labeling AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sponsorship": {
+      "main": [
+        [
+          {
+            "node": "Delete a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [
+    {
+      "updatedAt": "2025-12-19T07:08:57.882Z",
+      "createdAt": "2025-12-19T07:08:57.882Z",
+      "id": "3R7O91Y48KY6y4eU",
+      "name": "Email"
+    }
+  ],
+  "active": true,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

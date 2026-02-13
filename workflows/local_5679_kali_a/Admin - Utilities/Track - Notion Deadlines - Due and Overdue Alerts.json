@@ -1,0 +1,652 @@
+{
+  "id": "GGrCg2Qru99ppVGt",
+  "name": "Track - Notion Deadlines - Due and Overdue Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nMonitors due dates in Notion and sends deadline/overdue alerts.\n\nTrigger:\nSchedule Trigger (plus manual test trigger).\n\nProcess Summary:\n- Fetch tasks from Notion.\n- Sort and filter due/overdue items.\n- Format due and overdue summaries.\n- Send alert via Pushover.\n\nOutput:\nDeadline alert notifications for pending and overdue tasks.\n\nOwner:\nOperations Manager",
+        "height": 380,
+        "width": 620,
+        "color": 7
+      },
+      "id": "workflow-overview-note",
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        -400
+      ]
+    },
+    {
+      "parameters": {},
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        80,
+        608
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "24d85feb-6124-80b4-87eb-f791c557bc4a",
+          "mode": "list",
+          "cachedResultName": "Company Base",
+          "cachedResultUrl": "https://www.notion.so/24d85feb612480b487ebf791c557bc4a"
+        },
+        "options": {}
+      },
+      "name": "Notion",
+      "type": "n8n-nodes-base.notion",
+      "position": [
+        752,
+        496
+      ],
+      "typeVersion": 2.2,
+      "credentials": {
+        "notionApi": {
+          "id": "HWnInon8PhiMyJ8D",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "property_death_line.start"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Sort by closest deadline",
+      "type": "n8n-nodes-base.sort",
+      "position": [
+        1168,
+        480
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "179eecfc-7eea-46b9-a971-78824e5774dc",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.property_death_line.start }}",
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Filter for deadline",
+      "type": "n8n-nodes-base.filter",
+      "position": [
+        992,
+        480
+      ],
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\" />\n  <title>Weekly Notion Tasks Update</title>\n  <meta name=\"color-scheme\" content=\"light only\" />\n\n  <style>\n    body {\n      margin: 0;\n      padding: 0;\n      background-color: #f4f6fb;\n      font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\",\n                   Roboto, Inter, Helvetica, Arial, sans-serif;\n      color: #1f2937;\n    }\n\n    .container {\n      max-width: 680px;\n      margin: 0 auto;\n      background: #ffffff;\n      border-radius: 12px;\n      padding: 32px;\n      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);\n    }\n\n    /* Header */\n    .header {\n      display: flex;\n      align-items: center;\n      gap: 12px;\n      margin-bottom: 24px;\n    }\n\n    .header img {\n      width: 40px;\n      height: 40px;\n    }\n\n    h1 {\n      font-size: 1.6rem;\n      margin: 0;\n      color: #0f172a;\n    }\n\n    /* CTA Button */\n    .button {\n      display: inline-block;\n      background: linear-gradient(135deg, #2563eb, #1d4ed8);\n      color: #ffffff !important;\n      padding: 12px 20px;\n      border-radius: 8px;\n      font-weight: 600;\n      font-size: 0.95rem;\n      text-decoration: none;\n      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);\n      transition: transform 0.15s ease, box-shadow 0.15s ease;\n    }\n\n    .button:hover {\n      transform: translateY(-1px);\n      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.45);\n    }\n\n    /* Section spacing */\n    .content {\n      margin-top: 24px;\n    }\n\n    /* Task cards (injected HTML will inherit this) */\n    .task {\n      background: #f8fafc;\n      border: 1px solid #e5e7eb;\n      border-radius: 10px;\n      padding: 20px;\n      margin-bottom: 16px;\n    }\n\n    .task h3 {\n      margin-top: 0;\n      margin-bottom: 8px;\n      font-size: 1.1rem;\n      color: #111827;\n    }\n\n    .task p {\n      margin: 6px 0;\n      font-size: 0.9rem;\n      color: #374151;\n    }\n\n    .task strong {\n      color: #0f172a;\n    }\n\n    /* Footer */\n    .footer {\n      margin-top: 32px;\n      font-size: 0.8rem;\n      color: #6b7280;\n      text-align: center;\n    }\n\n    a {\n      color: #2563eb;\n      text-decoration: none;\n      font-weight: 500;\n    }\n  </style>\n</head>\n\n<body>\n  <div class=\"container\">\n    <!-- Header -->\n    <div class=\"header\">\n      <img src=\"{{ $('Set Workflow vars').item.json.logo_path }}\" alt=\"Logo\" />\n      <h1>Weekly Notion Tasks</h1>\n    </div>\n\n    <!-- CTA -->\n    <p>\n      <a\n        class=\"button\"\n        href=\"{{ $('Set Workflow vars').item.json.notion_database_url }}\"\n      >\n        Open Task Board in Notion →\n      </a>\n    </p>\n\n    <!-- Tasks -->\n    <div class=\"content\">\n      {{ $json.html_groups.pluck('html') }}\n    </div>\n\n    <!-- Footer -->\n    <div class=\"footer\">\n      You’re receiving this update because you track tasks in Notion.\n    </div>\n  </div>\n</body>\n</html>\n"
+      },
+      "name": "HTML",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        3104,
+        512
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "due_to",
+        "options": {}
+      },
+      "name": "Aggregate due to tasks",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        2080,
+        640
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "overdue",
+        "options": {}
+      },
+      "name": "Aggregate overdue tasks",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        2080,
+        368
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "userKey": "uprbriuu422ho3s4jyh5guroc62eu3",
+        "message": "={{ $json.html }}",
+        "priority": 1,
+        "additionalFields": {
+          "html": true
+        }
+      },
+      "name": "Pushover",
+      "type": "n8n-nodes-base.pushover",
+      "position": [
+        3296,
+        512
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "pushoverApi": {
+          "id": "mXasDjMNt5poDrto",
+          "name": "Pushover account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        80,
+        384
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "e65c0597-d067-423a-8496-35e91a8ddf1b",
+              "operator": {
+                "type": "dateTime",
+                "operation": "beforeOrEquals"
+              },
+              "leftValue": "={{ $json.property_death_line.start }}",
+              "rightValue": "={{ $now }}"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If deadline is overdue",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1840,
+        512
+      ],
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1600,
+        512
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "html": "<div class=\"task-card\">\n  <a href=\"{{ $json.url }}\" class=\"task-card__header\">\n    <h3 class=\"task-card__title\">{{ $json.name }}</h3>\n    <span class=\"task-card__status\">\n      {{ $json.property_status }}\n    </span>\n  </a>\n\n  <div class=\"task-card__body\">\n    <div class=\"task-card__row\">\n      <span class=\"label\">Deadline</span>\n      <span class=\"value deadline\">\n        {{ $json.property_death_line.start }}\n      </span>\n    </div>\n\n    <div class=\"task-card__row\">\n      <span class=\"label\">Priority</span>\n      <span class=\"badge badge--priority\">\n        {{ $json.property_tags[1] }}\n      </span>\n    </div>\n\n    <div class=\"task-card__row\">\n      <span class=\"label\">Tags</span>\n      <span class=\"tags\">\n        {{ $json.property_tags }}\n      </span>\n    </div>\n  </div>\n</div>\n"
+      },
+      "name": "HTML for Task",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        1392,
+        672
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "html": "<h2>Tasks with an <u>upcoming</u> deadline</h2>\n{{ $json.due_to.pluck('html') }}"
+      },
+      "name": "HTML due to List",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        2304,
+        640
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "html": "<h2>Tasks which are already <u>overdue</u></h2>\n{{ $if($json.overdue.length > 0, $json.overdue.pluck('html'), 'No overdue tasks. Great!') }}"
+      },
+      "name": "HTML overdue List",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        2304,
+        368
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "html_groups",
+        "options": {}
+      },
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        2832,
+        512
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Triggers\nCurrent schedule is every monday at 9 am.",
+        "height": 702.0052321200026,
+        "width": 265.6985239367243,
+        "color": 4
+      },
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Fetch, filter and sort notion tasks\nCurrently tasks are filtered by having a deadline and sorted by this",
+        "height": 710.0046767294216,
+        "width": 648.1928627806343
+      },
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        624,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Generate HTML template per task\nGenerate a template for each task. It displays the headline and some prperties.\nYou can adjust the template here to show more or less information about each task.",
+        "height": 707.700156943336,
+        "width": 442.45022302855995
+      },
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1312,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Create groups of tasks to \"overdue\" and \"due to\"\nThis is used to group the tasks and display them accordingly in the final html email template.",
+        "height": 707.7001569433354,
+        "width": 1185.3702378922917
+      },
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1792,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Create html email template\nHere the whole html email template is set up.\nStyles are applied and some sugar around list of tasks are shown.\nYou may change this to your design and even replace the logo.",
+        "height": 705.8925656662948,
+        "width": 314.11124235866913
+      },
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3008,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Send email and push notification\nIn the Pushover node you need to place you User Key to receive push notifications.\nUse the Pushover docs to read more about how to setup this service.",
+        "height": 704.0849743892543,
+        "width": 355.68584173060526,
+        "color": 4
+      },
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3360,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Dependencies\n- You need to have access to your notion page/database\n- You need to create a Pushover account in order to receive push notifications via this service",
+        "height": 199.46339277184228,
+        "width": 539.3442720010472,
+        "color": 6
+      },
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Set workflow variables\nAdjust this node to your needs!",
+        "height": 706.9018085580076,
+        "width": 284.11715106246396
+      },
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        304,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "976aac71-63c6-48a4-a965-8112ae3480bf",
+              "name": "logo_path",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "id": "d9ec1fff-56ff-4c3e-befd-99520b78200e",
+              "name": "pushover_user_key",
+              "type": "string",
+              "value": "uprbriuu422ho3s4jyh5guroc62eu3"
+            },
+            {
+              "id": "8271abe0-b9c7-4102-b1a2-37181dcb4ea6",
+              "name": "notion_database_url",
+              "type": "string",
+              "value": "https://www.notion.so/24d85feb612480b487ebf791c557bc4a?v=24d85feb612481088531000ce606572c"
+            },
+            {
+              "id": "ed7c4c03-f8e2-46fa-ac3b-ccabbeab24fa",
+              "name": "your_email",
+              "type": "string",
+              "value": "monaimabdel119@gmail.com"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set Workflow vars",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        384,
+        480
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "content": "## Adjustment needed\nIn order to not receive \"Done\" or \"Closed\" items from your notion database you need to add some filters in this Notion node.\n\nE.g. you could add \"Status\" is not equal to \"Closed\", to not get closed items.",
+        "height": 463.2108881217612,
+        "width": 296.4350404695249,
+        "color": 3
+      },
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        640,
+        352
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Pushover",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "If deadline is overdue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notion": {
+      "main": [
+        [
+          {
+            "node": "Filter for deadline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML for Task": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTML due to List": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Workflow vars",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML overdue List": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Workflow vars": {
+      "main": [
+        [
+          {
+            "node": "Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter for deadline": {
+      "main": [
+        [
+          {
+            "node": "Sort by closest deadline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate due to tasks": {
+      "main": [
+        [
+          {
+            "node": "HTML due to List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If deadline is overdue": {
+      "main": [
+        [
+          {
+            "node": "Aggregate overdue tasks",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate due to tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate overdue tasks": {
+      "main": [
+        [
+          {
+            "node": "HTML overdue List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort by closest deadline": {
+      "main": [
+        [
+          {
+            "node": "HTML for Task",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Set Workflow vars",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

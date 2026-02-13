@@ -1,0 +1,683 @@
+{
+  "id": "zyfDASfByD9FLTuoTvLA6",
+  "name": "upwork-->googlesheet",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "16wQAy9zymVdGPKQZwqwIjf_VYw_RG0GY1YbdC-HNiSw",
+          "mode": "list",
+          "cachedResultName": "upworklearning",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16wQAy9zymVdGPKQZwqwIjf_VYw_RG0GY1YbdC-HNiSw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16wQAy9zymVdGPKQZwqwIjf_VYw_RG0GY1YbdC-HNiSw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "JobID": "={{ $json.JobID }}",
+            "Client_Hires": "={{ $json.Client_Hires }}",
+            "Client_Jobs_Posted": "={{ $json.Client_Jobs_Posted }}",
+            "Payment_Status": "={{ $json.Payment_Status }}",
+            "Client_Spend_Bucket": "={{ $json.Client_Spend_Bucket }}",
+            "Client_Country": "={{ $json.Client_Country }}",
+            "Client_Account_Age": "={{ $json.Client_Account_Age }}",
+            "Job_Title": "={{ $json.Job_Title }}",
+            "Job_Type": "={{ $json.Job_Type }}",
+            "Budget_Level": "={{ $json.Budget_Level }}",
+            "Proposal_Count": "={{ $json.Proposal_Count }}",
+            "Experience_Level": "={{ $json.Experience_Level }}",
+            "Zero_Hire_Client ": "={{ $json['Zero_Hire_Client '] }}",
+            "Reposted_Job": "={{ $json.Reposted_Job }}",
+            "Low_Budget": "={{ $json.Low_Budget }}",
+            "Vague_Description": "={{ $json.Vague_Description }}",
+            "Payment_Verification": "={{ $json.Payment_Verification }}",
+            "Over_Scoped": "={{ $json.Over_Scoped }}",
+            "Hire_Probability_Score": "={{ $json.Hire_Probability_Score }}",
+            "Hire_Class": "={{ $json.Hire_Class }}",
+            "Decision": "={{ $json.Decision }}",
+            "Justification": "={{ $json.Justification }}",
+            "Percent_Skip": "={{ $json.Percent_Skip }}",
+            "Total_Jobs_Analyzed": "={{ $json.Total_Jobs_Analyzed }}",
+            "Top_Risk_Flags": "={{ $json.Top_Risk_Flags }}"
+          },
+          "matchingColumns": [
+            "output"
+          ],
+          "schema": [
+            {
+              "id": "JobID",
+              "displayName": "JobID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Client_Hires",
+              "displayName": "Client_Hires",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Client_Jobs_Posted",
+              "displayName": "Client_Jobs_Posted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Payment_Status",
+              "displayName": "Payment_Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Client_Spend_Bucket",
+              "displayName": "Client_Spend_Bucket",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Client_Country",
+              "displayName": "Client_Country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Client_Account_Age",
+              "displayName": "Client_Account_Age",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Job_Title",
+              "displayName": "Job_Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Job_Type",
+              "displayName": "Job_Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Budget_Level",
+              "displayName": "Budget_Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Proposal_Count",
+              "displayName": "Proposal_Count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Experience_Level",
+              "displayName": "Experience_Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Zero_Hire_Client ",
+              "displayName": "Zero_Hire_Client ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Reposted_Job",
+              "displayName": "Reposted_Job",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Low_Budget",
+              "displayName": "Low_Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Vague_Description",
+              "displayName": "Vague_Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Payment_Verification",
+              "displayName": "Payment_Verification",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Over_Scoped",
+              "displayName": "Over_Scoped",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Hire_Probability_Score",
+              "displayName": "Hire_Probability_Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Hire_Class",
+              "displayName": "Hire_Class",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Decision",
+              "displayName": "Decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Justification",
+              "displayName": "Justification",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Percent_Skip",
+              "displayName": "Percent_Skip",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Total_Jobs_Analyzed",
+              "displayName": "Total_Jobs_Analyzed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Top_Risk_Flags",
+              "displayName": "Top_Risk_Flags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1196,
+        32
+      ],
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d63d6439-6bbd-46b5-897d-8461e958d0dc",
+              "name": "JobID",
+              "value": "={{ $json.output.jobs[0].JobID }}",
+              "type": "string"
+            },
+            {
+              "id": "468b6171-3b9f-4153-ba4d-60714e75b078",
+              "name": "Client_Hires",
+              "value": "={{ $json.output.jobs[0].Client_Hires }}",
+              "type": "string"
+            },
+            {
+              "id": "5555034c-a141-48c5-a63f-c135843d2180",
+              "name": "Client_Jobs_Posted",
+              "value": "={{ $json.output.jobs[0].Client_Jobs_Posted }}",
+              "type": "string"
+            },
+            {
+              "id": "b4385466-8ff0-4612-9346-e8b68ccfc23f",
+              "name": "Payment_Status",
+              "value": "={{ $json.output.jobs[0].Payment_Status }}",
+              "type": "string"
+            },
+            {
+              "id": "80989ea3-275b-4083-812d-d502f25378fe",
+              "name": "Client_Spend_Bucket",
+              "value": "={{ $json.output.jobs[0].Client_Spend_Bucket }}",
+              "type": "string"
+            },
+            {
+              "id": "5ee6f8b7-a5fc-4f90-a0aa-46462fd16768",
+              "name": "Client_Country",
+              "value": "={{ $json.output.jobs[0].Client_Country }}",
+              "type": "string"
+            },
+            {
+              "id": "d5e1fa74-01af-4bad-bba5-0d1033b21c92",
+              "name": "Client_Account_Age",
+              "value": "={{ $json.output.jobs[0].Client_Account_Age }}",
+              "type": "string"
+            },
+            {
+              "id": "35e0c2bb-a0cc-4384-9e94-3df4c00c575b",
+              "name": "Job_Title",
+              "value": "={{ $json.output.jobs[0].Job_Title }}",
+              "type": "string"
+            },
+            {
+              "id": "17685a89-978c-407b-98bc-2a2192d2bb3d",
+              "name": "Job_Type",
+              "value": "={{ $json.output.jobs[0].Job_Type }}",
+              "type": "string"
+            },
+            {
+              "id": "9e318417-839e-4592-8887-40ebd3086cac",
+              "name": "Budget_Level",
+              "value": "={{ $json.output.jobs[0].Budget_Level }}",
+              "type": "string"
+            },
+            {
+              "id": "64fb016c-4b0a-4c2f-b613-728ef0971c28",
+              "name": "Proposal_Count",
+              "value": "={{ $json.output.jobs[0].Proposal_Count }}",
+              "type": "string"
+            },
+            {
+              "id": "8e448131-1640-4081-b70b-0251066fac7b",
+              "name": "Experience_Level",
+              "value": "={{ $json.output.jobs[0].Experience_Level }}",
+              "type": "string"
+            },
+            {
+              "id": "15e1fac1-619b-43c2-8f5e-6748de10be41",
+              "name": "Zero_Hire_Client ",
+              "value": "={{ $json.output.jobs[0].Zero_Hire_Client }}",
+              "type": "string"
+            },
+            {
+              "id": "25fab9b6-9df0-4016-850e-b388da0e932d",
+              "name": "Reposted_Job",
+              "value": "={{ $json.output.jobs[0].Reposted_Job }}",
+              "type": "string"
+            },
+            {
+              "id": "953565c0-c4f2-4314-8881-c5b953c7b738",
+              "name": "Low_Budget",
+              "value": "={{ $json.output.jobs[0].Low_Budget }}",
+              "type": "string"
+            },
+            {
+              "id": "c60c8c48-ec9f-4c3a-8fe7-61fa9e460b2b",
+              "name": "Vague_Description",
+              "value": "={{ $json.output.jobs[0].Vague_Description }}",
+              "type": "string"
+            },
+            {
+              "id": "dee26886-92bf-43c8-8e98-c862ae7fa048",
+              "name": "Payment_Verification",
+              "value": "={{ $json.output.jobs[0].Payment_Verification }}",
+              "type": "string"
+            },
+            {
+              "id": "f955383c-b42b-49c6-829e-0f913b634458",
+              "name": "Over_Scoped",
+              "value": "={{ $json.output.jobs[0].Over_Scoped }}",
+              "type": "string"
+            },
+            {
+              "id": "2d3cc1f5-24ba-4a76-aac5-07823c2413ef",
+              "name": "Hire_Probability_Score",
+              "value": "={{ $json.output.jobs[0].Hire_Probability_Score }}",
+              "type": "string"
+            },
+            {
+              "id": "41d1c3dd-1c13-4c51-9546-8dc225fa6724",
+              "name": "Hire_Class",
+              "value": "={{ $json.output.jobs[0].Hire_Class }}",
+              "type": "string"
+            },
+            {
+              "id": "d68a613d-052a-41c8-a42a-dce0abbcdcb6",
+              "name": "Decision",
+              "value": "={{ $json.output.jobs[0].Decision }}",
+              "type": "string"
+            },
+            {
+              "id": "623c782d-6e72-4094-b320-74303055b46c",
+              "name": "Justification",
+              "value": "={{ $json.output.jobs[0].Justification }}",
+              "type": "string"
+            },
+            {
+              "id": "abe99c36-a587-459a-8f2c-939037885de3",
+              "name": "Percent_Skip",
+              "value": "={{ $json.output.aggregate_summary.Percent_Skip }}",
+              "type": "string"
+            },
+            {
+              "id": "7979d426-26ab-41db-abed-417fc665614e",
+              "name": "Total_Jobs_Analyzed",
+              "value": "={{ $json.output.aggregate_summary.Total_Jobs_Analyzed }}",
+              "type": "string"
+            },
+            {
+              "id": "19b5fd1c-707d-424a-aafe-5782812b48fa",
+              "name": "Top_Risk_Flags",
+              "value": "={{ $json.output.aggregate_summary.Top_Risk_Flags.map(item => item.trim()).join(\", \") }}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        972,
+        32
+      ],
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorId": {
+          "__rl": true,
+          "value": "YdYsB7rsRY0EUb1lP",
+          "mode": "list",
+          "cachedResultName": "Upwork Job Scraper | Scrape up to 10k Jobs ✨ (MCP) (upwork-vibe/upwork-job-scraper)",
+          "cachedResultUrl": "https://console.apify.com/actors/YdYsB7rsRY0EUb1lP/input"
+        },
+        "customBody": "{\n    \"budget.allowUnspecifiedBudget\": true,\n    \"budget.hourlyWorkloads\": [\"UNSPECIFIED\", \"LESS_THAN_30_HOURS\", \"MORE_THAN_30_HOURS\"],\n    \"budget.jobDurations\": [\"UNSPECIFIED\", \"UP_TO_ONE_MONTH\", \"UP_TO_THREE_MONTHS\", \"UP_TO_SIX_MONTHS\", \"MORE_THAN_SIX_MONTHS\"],\n    \"budget.minClientHireRate\": 0,\n    \"client.includeWithNoFeedback\": true,\n    \"excludeKeywords.matchDescription\": false,\n    \"excludeKeywords.matchSkills\": false,\n    \"excludeKeywords.matchTitle\": false,\n    \"includeKeywords.matchDescription\": false,\n    \"includeKeywords.matchSkills\": false,\n    \"includeKeywords.matchTitle\": false,\n    \"jobCategories\": [\"AI & Machine Learning\"],\n    \"limit\": 10,\n    \"notifications.limit\": 3,\n    \"notifications.shouldSendRunMetadata\": true,\n    \"vendor.excludeWithQuestions\": false,\n    \"vendor.includeFeatured\": false,\n    \"vendor.includeWithoutCountryPreference\": false\n}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        304,
+        32
+      ],
+      "name": "Run an Actor and get dataset",
+      "credentials": {
+        "apifyApi": {
+          "id": "t2W3gm2OS8gUy8h2",
+          "name": "Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        80,
+        32
+      ],
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"jobs\": [\n    {\n      \"JobID\": \"string\",\n      \"Client_Hires\": \"number of hires\",\n      \"Client_Jobs_Posted\": \"number of jobs posted\",\n      \"Client_Hire_Rate\": \"decimal value\",\n      \"Payment_Status\": \"Payment Verified|Payment Not Verified\",\n      \"Client_Spend_Bucket\": \"Low|Medium|High\",\n      \"Client_Country\": \"string\",\n      \"Client_Account_Age\": \"string\",\n      \"Job_Title\": \"string\",\n      \"Job_Type\": \"Hourly|Fixed\",\n      \"Budget_Level\": \"Low|Market|High\",\n      \"Job_Description_Length\": \"Short|Medium|Long\",\n      \"Technical_Specificity\": \"Specific|Not Specific\",\n      \"Proposal_Count\": \"Low|Medium|High\",\n      \"Experience_Level\": \"string\",\n      \"Zero_Hire_Client\": \"Zero Hire Client|Not Zero Hire Client\",\n      \"Reposted_Job\": \"Reposted Job|Not Reposted Job\",\n      \"Low_Budget\": \"Low Budget|Budget Not Low\",\n      \"Vague_Description\": \"Vague Description|Description Specific\",\n      \"Payment_Verification\": \"Payment Verified|Payment Not Verified\",\n      \"Over_Scoped\": \"Over Scoped|Not Over Scoped\",\n      \"Hire_Probability_Score\": \"0.0-1.0\",\n      \"Hire_Class\": \"High|Medium|Low\",\n      \"Decision\": \"APPLY|SKIP\",\n      \"Justification\": \"Concise data-driven explanation using descriptive terms\"\n    }\n  ],\n  \"aggregate_summary\": {\n    \"Total_Jobs_Analyzed\": \"number of jobs\",\n    \"Percent_Skip\": \"percentage of jobs skipped\",\n    \"Top_Risk_Flags\": [\"Zero Hire Client\", \"Low Budget\", \"Reposted Job\"]\n  }\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        708,
+        464
+      ],
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [
+        604,
+        256
+      ],
+      "name": "Auto-fixing Output Parser"
+    },
+    {
+      "parameters": {
+        "model": "meta-llama/llama-3.3-70b-instruct:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        536,
+        464
+      ],
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "ctbR2LAfHA2bnaOM",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.uid }}\n{{ $json.title }}\n{{ $json.description }}{{ $json.createdAt }}\n{{ $json.skills }}{{ $json.applicationCost }}\n{{ $json.questions }}\n{{ JSON.stringify($json.budget) }}\n{{ JSON.stringify($json.budget.fixedBudget) }}\n{{ JSON.stringify($json.budget.hourlyRate) }}\n{{ JSON.stringify($json.client) }}\n{{ JSON.stringify($json.client.stats) }}\n{{ JSON.stringify($json.vendor) }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# Role\nYou are a large-scale applied machine learning system for analyzing Upwork job postings.\n\n# Objective\nAnalyze each job posting individually and determine:\n1. Hire probability (High / Medium / Low)  \n2. Decision (APPLY / SKIP)  \n3. Short justification based on extracted features  \n\nAll outputs must **use full descriptive words** instead of numeric or single-letter codes for clarity.  \n\n# Interaction Protocol\n1. Do NOT analyze anything until data is provided.  \n2. After receiving data, analyze **all jobs**, regardless of volume.  \n3. Output must be **fully tabular or JSON**, with each parameter as a separate field.  \n4. All flags must return **meaningful descriptive words**, not 0/1.  \n\n# Input\n- Raw HTML or extracted job descriptions  \n- May contain one or multiple jobs  \n\n# Feature Extraction\n\n**Client-Level Features**\n- Client_Hires\n- Client_Jobs_Posted\n- Client_Hire_Rate\n- Payment_Verified → `\"Payment Verified\"` or `\"Payment Not Verified\"`\n- Client_Spend_Bucket → `\"Low\"`, `\"Medium\"`, `\"High\"`\n- Client_Country\n- Client_Account_Age\n\n**Job-Level Features**\n- Job_Title\n- Job_Type → `\"Hourly\"` or `\"Fixed\"`\n- Budget_Level → `\"Low\"`, `\"Market\"`, `\"High\"`\n- Job_Description_Length → `\"Short\"`, `\"Medium\"`, `\"Long\"`\n- Technical_Specificity → `\"Specific\"` or `\"Not Specific\"`\n- Proposal_Count → `\"Low\"`, `\"Medium\"`, `\"High\"`\n- Experience_Level\n\n**Behavioral / Risk Flags** (descriptive)\n- Zero_Hire_Client → `\"Zero Hire Client\"` / `\"Not Zero Hire Client\"`\n- Reposted_Job → `\"Reposted Job\"` / `\"Not Reposted Job\"`\n- Low_Budget → `\"Low Budget\"` / `\"Budget Not Low\"`\n- Vague_Description → `\"Vague Description\"` / `\"Description Specific\"`\n- Not_Payment_Verified → `\"Payment Not Verified\"` / `\"Payment Verified\"`\n- Over_Scoped → `\"Over Scoped\"` / `\"Not Over Scoped\"`\n\n# Scoring and Decision\n- Hire_Probability_Score: 0–1 numeric score  \n- Hire_Class → `\"High\"`, `\"Medium\"`, `\"Low\"`  \n- Decision → `\"APPLY\"` / `\"SKIP\"`  \n- Justification → concise data-driven sentence using descriptive terms\n\n# Output\n- JSON format, one object per job, all words fully descriptive  \n- Aggregate summary optional: total jobs, % SKIP, top 3 risk flags  \n\n# Ready State\nBefore data is received, respond only with:  \n\"Ready to receive job data for individual analysis.\"\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        528,
+        32
+      ],
+      "name": "AI Agent"
+    }
+  ],
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run an Actor and get dataset": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Run an Actor and get dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": true,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

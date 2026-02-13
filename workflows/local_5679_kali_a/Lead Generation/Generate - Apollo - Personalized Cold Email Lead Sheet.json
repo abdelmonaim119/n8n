@@ -1,0 +1,380 @@
+{
+  "id": "Y-1hPnsDYxYAddeIfLu1o",
+  "name": "Generate - Apollo - Personalized Cold Email Lead Sheet",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nBuilds personalized outbound lead data from Apollo scraping runs.\n\nTrigger:\nManual trigger.\n\nProcess Summary:\n- Set Apollo source and run parameters.\n- Call scraping endpoint and collect results.\n- Filter usable leads and emails.\n- Append qualified rows to Google Sheets.\n\nOutput:\nLead spreadsheet populated with enriched outreach candidates.\n\nOwner:\nOutbound SDR Team",
+        "height": 380,
+        "width": 620,
+        "color": 7
+      },
+      "id": "workflow-overview-note",
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -332,
+        -160
+      ]
+    },
+    {
+      "parameters": {},
+      "name": "When clicking ‘Execute workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        464,
+        400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "Scraped Leads",
+        "options": {}
+      },
+      "name": "Create spreadsheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        688,
+        400
+      ],
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "57cb10ee-3189-464e-b20d-514ee13017c3",
+              "name": "Apollo URL",
+              "type": "string",
+              "value": "https://app.apollo.io/#/companies?sortAscending=false&sortByField=recommendations_score&prospectedByCurrentTeam[]=yes&page=1&recommendationConfigId=score"
+            },
+            {
+              "id": "04a61783-c3ed-4fbf-b905-ec4530ff147d",
+              "name": "Amount to Scrape",
+              "type": "string",
+              "value": "4"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "EDIT Apollo URL + Amount",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        928,
+        400
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5eb4ef62-cdf5-4b5f-a4a6-bfa0295f075a",
+              "name": "first_name",
+              "type": "string",
+              "value": "={{ $json.first_name }}"
+            },
+            {
+              "id": "f06da4be-cf02-4cd7-adba-3f45ebbc6ca2",
+              "name": "last_name",
+              "type": "string",
+              "value": "={{ $json.last_name }}"
+            },
+            {
+              "id": "ad32e977-b973-40a3-94d4-283b9760c6b0",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "id": "eb1e5f3f-daf3-44a7-b641-17ec11a56503",
+              "name": "organization_name",
+              "type": "string",
+              "value": "={{ $json.organization_name }}"
+            },
+            {
+              "id": "98ba5b54-ef78-48bf-997e-c3c3d2d06e8b",
+              "name": "organization_website_url",
+              "type": "string",
+              "value": "={{ $json.organization_website_url }}"
+            },
+            {
+              "id": "5634ba39-ed23-4ef6-80f8-7ca0babbf476",
+              "name": "city",
+              "type": "string",
+              "value": "={{ $json.city }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Keep Fields",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2000,
+        416
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cb033b7d-fcc8-4504-a534-397c42e05b88",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.email }}",
+              "rightValue": ""
+            },
+            {
+              "id": "3f48d7e0-f786-48b4-9094-119e444feba1",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.organization_website_url }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Filter URL + Email",
+      "type": "n8n-nodes-base.filter",
+      "position": [
+        1808,
+        416
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apollo.io/api/v1/people/match",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "reveal_personal_emails",
+              "value": "false"
+            },
+            {
+              "name": "reveal_phone_number",
+              "value": "false"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Cache-Control",
+              "value": "no-cache"
+            },
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "authorization",
+              "value": "Bearer d25thMQhbuo3JzqTn6WRSA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"cleanOutput\": true,\n    \"totalRecords\": {{ $json['Amount to Scrape'] }},\n    \"url\": \"{{ $json['Apollo URL'] }}\"\n} ",
+        "options": {}
+      },
+      "name": "Call Apify Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1376,
+        416
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Receive Scraper's Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1600,
+        416
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "content": "## Create Spreadsheet To Capture Leads\n\n- This section creates a spreadsheet inside your Google Drive Account to capture all leads and their Icebreaker / Subject Line.\n- Make sure to add credentials.",
+        "height": 400,
+        "width": 544
+      },
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        368,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Apollo Scraper\n- The first node calls the \"🔥Apollo Scraper - Scrape upto 50k Leads\" Apify scraper. For that, insert the \"Run Actor synchronously\" API inside API > API Endpoints.\n- The second node receives the scraper's data. Insert the \"Get last run dataset items\" API.\n- Filters out those leads how do not have a website or email included.",
+        "height": 400,
+        "width": 864
+      },
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1280,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2208,
+        416
+      ],
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Keep Fields": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Apify Scraper": {
+      "main": [
+        [
+          {
+            "node": "Receive Scraper's Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "EDIT Apollo URL + Amount",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter URL + Email": {
+      "main": [
+        [
+          {
+            "node": "Keep Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Scraper's Data": {
+      "main": [
+        [
+          {
+            "node": "Filter URL + Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EDIT Apollo URL + Amount": {
+      "main": [
+        [
+          {
+            "node": "Call Apify Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Create spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

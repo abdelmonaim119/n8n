@@ -1,0 +1,7 @@
+
+# n8n-as-code AI helpers
+n8nac-skills
+n8nac-skills.cmd
+# n8n local runtime artifacts
+workflows/**/personal/.trash/
+workflows/**/personal/.n8n-state.json

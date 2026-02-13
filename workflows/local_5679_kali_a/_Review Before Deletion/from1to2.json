@@ -1,0 +1,420 @@
+{
+  "id": "NRaADGT33RU2Y4oF",
+  "name": "from1to2",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        480
+      ],
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o",
+          "mode": "list",
+          "cachedResultName": "ScrapingGoogleMap",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "US",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        480
+      ],
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        656,
+        480
+      ],
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Persona Generation Prompt\n\nYou are a **persona creation assistant**. Your task is to take structured input data about a contact or company and **generate a GraphQL mutation** to insert a buyer persona and interpretated this \"Pain Points\".\n\nInput variables:\n- Website: {{ $json.Website }}\n- Phone: {{ $json['phone numbre'] }}\n- Industry: {{ $json.icategory }}\n- Email: {{ $json.email }}\n- Company size: {{ $json['size of company'] }}\n- LinkedIn: {{ $json.linkedin }}\n- About company: {{ $json['about company'] }}\n\n**Important rules:**\n1. The output **must be exactly this JSON structure**, no extra fields, no missing quotes, no formatting changes:\n\n{\n  \"query\": \"mutation CreatePersona { insert_buyer_personas_one(object: { full_name: \\\"<FULL_NAME>\\\", role: \\\"<ROLE>\\\", email: \\\"<EMAIL>\\\", phone: \\\"<PHONE>\\\", company_name: \\\"<COMPANY_NAME>\\\", industry: \\\"<INDUSTRY>\\\", company_size: \\\"<COMPANY_SIZE>\\\", country: \\\"<COUNTRY>\\\", source: \\\"<SOURCE>\\\", tags: \\\"<TAGS>\\\", intent_score: <INTENT_SCORE>, pain_points: \\\"<PAIN_POINTS>\\\" }) { id full_name } }\"\n}\n\n2. **Always include `tags` and `pain_points` fields**:\n   - If multiple tags exist, join them into a single phrase with spaces only (no commas).  \n     Example: `[\"Healthcare\", \"Enterprise\"]` → `\"Healthcare Enterprise\"`  \n   - If multiple pain points exist, join them into a single phrase with spaces only (no commas).  \n     Example: `[\"Slow Response\", \"High Cost\"]` → `\"Slow Response High Cost\"`  \n   - If they do not exist, set them to `\"\"`.\n\n3. All other text fields must also be plain phrases with no commas.  \n4. Do not add explanations, comments, or extra output.  \n5. Ensure all quotation marks are correct for JSON.  \n6. Keep the structure **exactly as shown**, including the outer braces and field order.\n\n**Example Output:**\n\n```json\n{\n  \"query\": \"mutation CreatePersona { insert_buyer_personas_one(object: { full_name: \\\"Aster DM Healthcare Admin\\\", role: \\\"Procurement Director\\\", email: \\\"info@asterdmhealthcare.com\\\", phone: \\\"97144546001\\\", company_name: \\\"Aster DM Healthcare\\\", industry: \\\"Healthcare\\\", company_size: \\\"Enterprise Company\\\", country: \\\"US\\\", source: \\\"Google Maps\\\", tags: \\\"Healthcare Enterprise\\\", intent_score: 92, pain_points: \\\"Slow Response High Cost\\\" }) { id full_name } }\"\n}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a persona creation assistant. Your task is to take structured input data about a contact or company and generate a GraphQL mutation to insert a buyer persona. Use only the provided input values, do not hallucinate or guess any data. Ensure proper formatting for JSON and GraphQL, including arrays and numeric values"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        880,
+        304
+      ],
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [
+        960,
+        528
+      ],
+      "name": "Auto-fixing Output Parser"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"FULL_NAME\": \"Aster DM Healthcare Admin\",\n  \"ROLE\": \"Procurement Director\",\n  \"EMAIL\": \"info@asterdmhealthcare.com\",\n  \"PHONE\": \"97144546001\",\n  \"COMPANY_NAME\": \"Aster DM Healthcare\",\n  \"INDUSTRY\": \"Healthcare\",\n  \"COMPANY_SIZE\": \"Large\",\n  \"COUNTRY\": \"United Arab Emirates\",\n  \"TAGS\":\"text\",\n  \"PAIN_POINTS\":\"text\",\n  \"INTENT_SCORE\": 92,\n  \"ORG_ID\": \"7df0d999-d96b-41ce-a2db-883c77b984f1\",\n  \"CREATED_BY\": \"7df0d999-d96b-41ce-a2db-883c77b984f1\",\n  \"HASURA_ADMIN_SECRET\": \"e5CnBmG-8lV9-7v,S4'_0c7f@9bRznm=\"\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1072,
+        736
+      ],
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": "mistral-large-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        896,
+        736
+      ],
+      "name": "Mistral Cloud Chat Model",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "ULrl5qHqTv9VVZF9",
+          "name": "Mistral Cloud monaimkali59"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://afieurpmggjeqebegnfb.hasura.eu-west-2.nhost.run/v1/graphql",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-hasura-admin-secret",
+              "value": "e5CnBmG-8lV9-7v,S4'_0c7f@9bRznm="
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"mutation CreatePersona($full_name: String!, $role: String!, $email: String!, $phone: String!, $company_name: String!, $industry: String!, $company_size: String!, $country: String!, $tags: String!, $pain_points: String!, $intent_score: Int!) { insert_buyer_personas_one(object: { full_name: $full_name, role: $role, email: $email, phone: $phone, company_name: $company_name, industry: $industry, company_size: $company_size, country: $country, tags: $tags, pain_points: $pain_points, intent_score: $intent_score, organization_id: \\\"7df0d999-d96b-41ce-a2db-883c77b984f1\\\", created_by: \\\"7df0d999-d96b-41ce-a2db-883c77b984f1\\\" }) { id full_name } }\",\n  \"variables\": {\n    \"full_name\": \"{{ $json.output.FULL_NAME }}\",\n    \"role\": \"{{ $json.output.ROLE }}\",\n    \"email\": \"{{ $json.output.EMAIL }}\",\n    \"phone\": \"{{ $json.output.PHONE }}\",\n    \"company_name\": \"{{ $json.output.COMPANY_NAME }}\",\n    \"industry\": \"{{ $json.output.INDUSTRY }}\",\n    \"company_size\": \"{{ $json.output.COMPANY_SIZE }}\",\n    \"country\": \"{{ $json.output.COUNTRY }}\",\n    \"tags\": \"{{ $json.output.TAGS }}\",\n    \"pain_points\": \"{{ $json.output.PAIN_POINTS }}\",\n    \"intent_score\": {{ $json.output.INTENT_SCORE }}\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1328,
+        304
+      ],
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o",
+          "mode": "list",
+          "cachedResultName": "ScrapingGoogleMap",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "US",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $('Loop Over Items').item.json.email }}",
+            "row_number": 0,
+            "sent": "yes"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "Website",
+              "displayName": "Website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone numbre",
+              "displayName": "phone numbre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "icategory",
+              "displayName": "icategory",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "size of company",
+              "displayName": "size of company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "linkedin",
+              "displayName": "linkedin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "about company",
+              "displayName": "about company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sent",
+              "displayName": "sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1552,
+        480
+      ],
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.slice(206);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        480
+      ],
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

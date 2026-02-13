@@ -1,0 +1,290 @@
+{
+  "id": "Yri6cFRR3UTOoMMh",
+  "name": "scrpite image gene",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        -16
+      ],
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "actorId": {
+          "__rl": true,
+          "value": "NtMTjlvWvFlAEAcgc",
+          "mode": "list",
+          "cachedResultName": "YouTube Transcript Fetcher (crawlmaster/youtube-transcript-fetcher)",
+          "cachedResultUrl": "https://console.apify.com/actors/NtMTjlvWvFlAEAcgc/input"
+        },
+        "customBody": "={\n   \"lang\": \"en\",\n  \"max_videos\": 10,\n  \"start_date\": \"2024-01-01\",\n  \"url\": \"{{ $json.Video }}\"\n} "
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        704,
+        -16
+      ],
+      "name": "Youtoube",
+      "credentials": {
+        "apifyApi": {
+          "id": "t2W3gm2OS8gUy8h2",
+          "name": "Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Datasets",
+        "datasetId": "={{ $json.defaultDatasetId }}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        832,
+        -16
+      ],
+      "name": "Get dataset",
+      "credentials": {
+        "apifyApi": {
+          "id": "t2W3gm2OS8gUy8h2",
+          "name": "Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const transcript = item.json.transcript || [];\n\n  const fullText = transcript\n    .map(segment => segment.text)\n    .join(' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n\n  return {\n    json: {\n      video_id: item.json.video_id,\n      title: item.json.title,\n      transcription_text: fullText\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        -16
+      ],
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following YouTube video transcript and generate a single paragraph that summarizes the key trends and provides actionable steps, including relevant skills or tools to focus on:\n\ninput :{{ $('Get dataset').item.json.title }}\n{{ $('Get dataset').item.json.description }}\n{{ $json.transcription_text }}\n\nExample Output\n\n\"In 2026, AI trends include multi-agent orchestration where teams of AI agents collaborate under a coordinator to perform tasks efficiently, digital labor workforces using autonomous agents for workflow automation, and physical AI with robots trained in simulations interacting with the real world. To follow these trends, focus on learning AI agent development, workflow automation, robotics, and edge AI deployment, while exploring tools such as agentic platforms, humanoid robots, and inference-time computing models.\"",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an AI research assistant specialized in extracting actionable insights from video transcripts. \n\nYour task is to read the transcript and return a single paragraph that combines:\n\n1. A brief summary of the main points or trends discussed.\n2. Actionable steps or recommendations based on the content.\n3. Relevant skills, tools, or knowledge areas to learn or use.\n\nDo not add opinions or unrelated commentary. Keep it factual, concise, and fully contained in one paragraph.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1248,
+        -16
+      ],
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "mistral-large-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        192
+      ],
+      "name": "Mistral Cloud Chat Model",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "ULrl5qHqTv9VVZF9",
+          "name": "Mistral Cloud monaimkali59"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        192
+      ],
+      "name": "Auto-fixing Output Parser"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"trend_name\": \"\",\n  \"summary\": \"\",\n  \"skills_to_learn\": \"\",\n  \"tools_or_technologies\": \"\"\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1568,
+        400
+      ],
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        240,
+        -16
+      ],
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "528cd5bf-98b0-436c-95ce-caf1f582899c",
+              "name": "Video",
+              "value": "https://www.youtube.com/watch?v=xxARTGo_Oqg",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        32,
+        -16
+      ],
+      "name": "Edit Fields"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Youtoube": {
+      "main": [
+        [
+          {
+            "node": "Get dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get dataset": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Youtoube",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

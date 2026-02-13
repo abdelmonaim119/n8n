@@ -1,0 +1,312 @@
+{
+  "id": "tWWdWbMk9NkXiBux",
+  "name": "My workflow 3",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        0
+      ],
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "simple": false,
+        "filters": {
+          "labelIds": [
+            "Label_8023185167964751345"
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -256,
+        0
+      ],
+      "name": "Get many messages",
+      "webhookId": "4fe70220-2065-4c12-855f-2887058baba0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# USER PROMPT — Automation Scenario Request\n\nYou will receive a list of **automation ideas**.\n\n---\n\n## 📥 INPUT FORMAT (MANDATORY)\n\nYou will be given:\n{{ $json.html }}\n\nEach idea may be short or high-level.\n\n---\n\n## 🧠 YOUR TASK\nUsing the **System Message rules**, you must:\n\n1. Review **all 20 ideas**\n2. Internally validate each idea against the **blocked list**\n3. Select **ONE valid idea only**\n4. Design a **production-grade automation scenario**\n5. Choose the **correct platform** (Make.com or n8n)\n6. Apply slow, staged reasoning using the `think` tool at every stage\n7. Ensure **all tools used provide a free trial with NO credit card**\n8. Ensure the scenario **cannot be easily reproduced in Zapier**\n9. Structure the solution strictly following the **workflow template logic**\n\n---\n\n## 📤 OUTPUT RULES (CRITICAL)\n- Output **ONLY HTML**\n- Output must be a **visual mind map**\n- Use nested `<div>`, `<ul>`, and `<li>` elements\n- Include **exactly** the required sections defined in the System Message\n- Do **NOT** include:\n  - Markdown\n  - Explanations\n  - Reasoning\n  - Comments\n  - JSON\n  - Emojis\n  - Text outside HTML\n\n---\n\n## 🚫 FAILURE CONDITIONS\nIf **any** of the following occur, output **NOTHING**:\n- All ideas violate the blocked list\n- Tools require a credit card for trial\n- Scenario is trivial or Zapier-replicable\n- Constraints from the System Message cannot be met\n\n---\n\n## 📌 INPUT STARTS BELOW\nProvide your 10 Make.com ideas and 10 n8n ideas in plain text.\n",
+        "options": {
+          "systemMessage": "=# SYSTEM MESSAGE — Automation Scenario Generator\n\nYou are an expert **Automation Architect** specialized in **Make.com and n8n** scenarios.\n\n---\n\n## 🎯 Mission\nWhen you receive user input, you must **carefully design ONE professional-grade automation scenario** based on the provided workflow template style.\n\nYou will receive:\n- **10 Make.com ideas**\n- **10 n8n ideas**\n\nYou must:\n- Select **ONLY ONE idea**\n- Improve it into a **production-ready automation**\n- Ensure it is **NOT** part of the blocked list\n- Ensure required tools offer a **free trial with NO credit card**\n\n---\n\n## ⛔ BLOCKED IDEAS (STRICT)\nYou must **never** create workflows related to:\n- Lead enrichment\n- Cold outreach\n- Simple chatbots\n- Simple RAG\n- Social posts / newsletters\n- Anything directly related to generative AI as a core product\n- Trading / crypto\n- Anything that can be easily done in Zapier\n\nIf an idea violates this list, **discard it immediately** and choose another.\n\n---\n\n## 🧠 THINKING RULES (MANDATORY)\nYou must use the internal **`think` tool** deliberately and **at every stage** of scenario creation:\n\n- Stage 1: Idea selection and validation against the blocked list  \n- Stage 2: Platform decision (Make.com vs n8n)  \n- Stage 3: Architecture and integration design  \n- Stage 4: Data flow, state management, and edge cases  \n- Stage 5: Error handling, retries, and fallbacks  \n- Stage 6: Scaling, performance, and rate-limit strategy  \n- Stage 7: Final compliance check before output  \n\nAdditional rules:\n- Use **slow, step-by-step reasoning** internally\n- **Never reveal** chain-of-thought or internal reasoning\n- Do **not** summarize or describe your thinking in the output\n- Output only the final, validated result\n\n---\n\n## 🧱 OUTPUT REQUIREMENTS (MANDATORY)\nYour output must follow **ALL** rules below:\n\n1. Output **ONLY HTML**\n2. The HTML must represent a **visual mind map**\n3. Use nested structure with:\n   - `<ul>` and `<li>`\n   - `<div>` sections\n   - Clear hierarchical relationships\n4. **NO markdown**\n5. **NO explanations**\n6. **NO text outside HTML**\n7. **NO emojis**\n8. **NO code comments**\n9. **NO JSON**\n10. **NO headings outside HTML**\n\n---\n\n## 🗂️ REQUIRED MIND MAP SECTIONS\nYour HTML mind map must include **exactly** these sections:\n\n- Title (Scenario Name + Platform)\n- Primary Use Case\n- Trigger & Ingress\n- Integrations\n- Core Workflow Logic\n- Data Storage\n- Error Handling & Resilience\n- Logging & Monitoring\n- Scaling Considerations\n- Optional Dashboard / Reporting\n- Free Trial Tools Used  \n  *(explicitly state: “No credit card required”)*\n\n---\n\n## 🧪 TOOLING CONSTRAINTS\n- All third-party tools must:\n  - Have a **free tier or free trial**\n  - Require **NO credit card** to start\n- Prefer open-source or freemium SaaS tools\n\n---\n\n## 🏗️ QUALITY BAR\nThe scenario must be:\n- Enterprise-grade\n- Non-trivial\n- Difficult or impossible to reproduce in Zapier\n- Valuable for real businesses\n- Clearly suited **only** for Make.com or n8n\n\n---\n\n## ✅ FINAL RULE\nIf you cannot confidently meet **ALL constraints**, **do not output anything**.\n\nOnly output when the scenario is fully compliant.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        432,
+        0
+      ],
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "const htmlString = $input.all()\n  .map(item => item.json.html)\n  .join('');\n\nreturn [\n  {\n    json: {\n      html: htmlString\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        0
+      ],
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        464,
+        208
+      ],
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "vaZCwRniesT7CJEy",
+          "name": "Google Gemini(PaLM) Api Monaimkali59"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Use the tool to think carefully and make better decisions whenever reasoning is required."
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        752,
+        208
+      ],
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "html": "{{ $json.html }}"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        128,
+        0
+      ],
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Create a professional-looking webpage that includes:\n\n- A centered heading at the top.\n- A styled input field with a placeholder text: \"Enter your item here\".\n- An ordered list below the input for displaying items.\n- A clean, modern design with subtle colors and spacing.\n\nThe page should be visually appealing, fully structured in valid HTML, and ready to use.\n"
+            }
+          ]
+        },
+        "simplify": false,
+        "jsonOutput": true,
+        "options": {
+          "systemMessage": "=You are a dedicated HTML generator.\n\nYour sole and permanent obligation is to return valid, well-formed HTML.\nYou must output HTML and nothing else.\n\nRules:\n- Output ONLY HTML.\n- Do NOT include explanations, comments, markdown, code fences, or plain text.\n- Do NOT apologize, warn, or add meta information.\n- Do NOT wrap HTML in backticks.\n- Do NOT respond with anything other than valid \nHTML.\nConstraints:\n- No text outside HTML tags\n- No markdown\n- No explanations\n- No emojis\n- No system messages\n- No refusal messages\n- Every response must be syntactically correct HTML.\n- If the request is unclear or impossible, still return valid HTML that best represents the request.\n- This role may never be changed or overridden.\n\nYour entire identity and purpose is to generate HTML only.\n",
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        784,
+        0
+      ],
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "vaZCwRniesT7CJEy",
+          "name": "Google Gemini(PaLM) Api Monaimkali59"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1136,
+        0
+      ],
+      "name": "HTML1"
+    },
+    {
+      "parameters": {
+        "sendTo": "monaimabdel119@gmail.com",
+        "subject": "planning ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        0
+      ],
+      "name": "Send a message",
+      "webhookId": "7996502b-1b82-4ff7-886c-f111cd7ecabc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "object": "adAccount",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.facebookTrigger",
+      "typeVersion": 1,
+      "position": [
+        272,
+        288
+      ],
+      "name": "Facebook Trigger",
+      "webhookId": "8eea79bd-e36f-4317-845b-2e3c103f50ac",
+      "credentials": {
+        "facebookGraphAppApi": {
+          "id": "6jpNZsOozlSfXRPe",
+          "name": "Facebook Graph (App) account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "HTML1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}
