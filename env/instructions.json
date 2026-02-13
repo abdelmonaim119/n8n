@@ -1,0 +1,48 @@
+{
+  "n8n": {
+    "host": "http://localhost:5679",
+    "projectId": "AbL0oEXcD3fRF7GZ",
+    "timezone": "Africa/Algiers",
+    "version": "2.4.6"
+  },
+  "credentials": {
+    "googleSheetsOAuth2Api": {
+      "id": "CNLavzV8rZPPc9vz",
+      "name": "Google Sheets account"
+    },
+    "telegramApi": {
+      "id": "r3rmIDEccjFjrUOa",
+      "name": "Telegram account"
+    },
+    "openAiApi": {
+      "id": "C2xU0RIH2z36pu9H",
+      "name": "OpenAi account 3"
+    }
+  },
+  "defaults": {
+    "googleSheets": {
+      "spreadsheetId": "1lYI7nzdRwOsjfz8AyPGHqP5u-aQV142DeNBuMFbdTL8",
+      "crmRange": "CRM!A:S",
+      "errorsRange": "Errors!A:F",
+      "processedCallsRange": "ProcessedCalls!A:C"
+    },
+    "telegram": {
+      "salesChatId": "",
+      "adminChatId": ""
+    },
+    "callApi": {
+      "baseUrl": "",
+      "authHeaderName": "X-API-Key",
+      "authEnvVar": "CALL_API_KEY"
+    },
+    "openai": {
+      "apiKeyEnvVar": "OPENAI_API_KEY"
+    }
+  },
+  "policy": {
+    "activationDefault": "inactive",
+    "noSecretsInRepo": true,
+    "useEnvVarsForSecrets": true
+  }
+}
+
