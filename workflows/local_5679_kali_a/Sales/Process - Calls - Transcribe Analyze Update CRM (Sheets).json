@@ -154,6 +154,27 @@
     },
     {
       "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ !!$env.OPENAI_API_KEY }}",
+              "operation": "equal",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "c5d1bf4e-6a6c-4b8c-9d31-5c2eb4c9d98a",
+      "name": "OpenAI Key Present?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1300,
+        260
+      ]
+    },
+    {
+      "parameters": {
         "authentication": "none",
         "requestMethod": "POST",
         "url": "https://api.openai.com/v1/audio/transcriptions",
@@ -166,7 +187,7 @@
         "sendBinaryData": true,
         "binaryPropertyName": "file:audio",
         "bodyParametersJson": "{\n  \"model\": \"whisper-1\"\n}\n",
-        "headerParametersJson": "{\n  \"Authorization\": \"Bearer CHANGE_ME_OPENAI_KEY\"\n}\n"
+        "headerParametersJson": "={{ { Authorization: 'Bearer ' + $env.OPENAI_API_KEY } }}"
       },
       "id": "4dcdbb00-bf1c-4e52-92d4-ec6404b1c02a",
       "name": "Transcribe (Whisper)",
@@ -225,7 +246,7 @@
           "timeout": 180000
         },
         "bodyParametersJson": "={\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0.2,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a structured sales call analyzer. Extract only facts present in the transcript. Do not infer or invent information. Output valid JSON only.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Analyze the transcript and extract structured sales insights.\\n\\nReturn JSON with exactly these fields:\\n{\\n  \\\"summary\\\": \\\"max 120 words factual summary\\\",\\n  \\\"interest_level\\\": \\\"Low|Medium|High\\\",\\n  \\\"objections\\\": \\\"comma separated list or empty string\\\",\\n  \\\"next_action\\\": \\\"clear next step based only on transcript\\\",\\n  \\\"greeting_detected\\\": true/false,\\n  \\\"product_explained\\\": true/false,\\n  \\\"price_discussed\\\": true/false,\\n  \\\"objection_handled\\\": true/false,\\n  \\\"closing_attempt\\\": true/false\\n}\\n\\nTranscript:\\n\" + $json.transcript\n    }\n  ]\n}\n",
-        "headerParametersJson": "{\n  \"Authorization\": \"Bearer CHANGE_ME_OPENAI_KEY\",\n  \"Content-Type\": \"application/json\"\n}\n"
+        "headerParametersJson": "={{ { Authorization: 'Bearer ' + $env.OPENAI_API_KEY, 'Content-Type': 'application/json' } }}"
       },
       "id": "f56b1b07-302c-49c2-a6d1-6e1c9c6c709a",
       "name": "Analyze Transcript (LLM)",
@@ -467,7 +488,7 @@
       "main": [
         [
           {
-            "node": "Transcribe (Whisper)",
+            "node": "OpenAI Key Present?",
             "type": "main",
             "index": 0
           }
@@ -479,6 +500,18 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "OpenAI Key Present?": {
+      "main": [
+        [
+          {
+            "node": "Transcribe (Whisper)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
       ]
     },
     "Transcribe (Whisper)": {
@@ -600,4 +633,3 @@
     }
   }
 }
-

@@ -57,16 +57,37 @@
     },
     {
       "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ !!$env.CALL_API_BASE_URL && !!$env.CALL_API_KEY }}",
+              "operation": "equal",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "1a9a7f3c-8152-4f58-9c66-6d7c5bd5855e",
+      "name": "Config Present?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        220,
+        260
+      ]
+    },
+    {
+      "parameters": {
         "authentication": "headerAuth",
         "requestMethod": "GET",
-        "url": "={{ ($env.CALL_API_BASE_URL || 'https://api.example.com') + '/calls' }}",
+        "url": "={{ $env.CALL_API_BASE_URL + '/calls' }}",
         "responseFormat": "json",
         "jsonParameters": false,
         "headerParametersUi": {
           "parameter": [
             {
               "name": "X-API-Key",
-              "value": "CHANGE_ME_CALL_API_KEY"
+              "value": "={{ $env.CALL_API_KEY }}"
             }
           ]
         },
@@ -234,11 +255,23 @@
       "main": [
         [
           {
-            "node": "Fetch Calls",
+            "node": "Config Present?",
             "type": "main",
             "index": 0
           }
         ]
+      ]
+    },
+    "Config Present?": {
+      "main": [
+        [
+          {
+            "node": "Fetch Calls",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
       ]
     },
     "Fetch Calls": {
