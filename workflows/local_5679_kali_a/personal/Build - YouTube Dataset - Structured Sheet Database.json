@@ -1,0 +1,337 @@
+{
+  "id": "h3pONFBT0Klyr5Oz",
+  "name": "Build - YouTube Dataset - Structured Sheet Database",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nCollects dataset items and structures them into a reusable sheet database.\n\nTrigger:\nManual trigger.\n\nProcess Summary:\n- Run Apify data collection.\n- Transform raw dataset in code and AI nodes.\n- Append structured rows to Google Sheets.\n\nOutput:\nStructured database rows in Google Sheets.\n\nOwner:\nGrowth Research",
+        "height": 380,
+        "width": 620,
+        "color": 7
+      },
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4,
+        -400
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        704,
+        0
+      ],
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "actorId": {
+          "__rl": true,
+          "value": "NtMTjlvWvFlAEAcgc",
+          "mode": "list",
+          "cachedResultName": "YouTube Transcript Fetcher (crawlmaster/youtube-transcript-fetcher)",
+          "cachedResultUrl": "https://console.apify.com/actors/NtMTjlvWvFlAEAcgc/input"
+        },
+        "customBody": "{\n   \"lang\": \"en\",\n  \"max_videos\": 10,\n  \"start_date\": \"2024-01-01\",\n  \"url\": \"https://www.youtube.com/watch?v=zt0JA5rxdfM&t=15s\"\n}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        0
+      ],
+      "name": "Youtoube",
+      "credentials": {
+        "apifyApi": {
+          "id": "t2W3gm2OS8gUy8h2",
+          "name": "Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Datasets",
+        "datasetId": "={{ $json.defaultDatasetId }}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        0
+      ],
+      "name": "Get dataset",
+      "credentials": {
+        "apifyApi": {
+          "id": "t2W3gm2OS8gUy8h2",
+          "name": "Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const transcript = item.json.transcript || [];\n\n  const fullText = transcript\n    .map(segment => segment.text)\n    .join(' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n\n  return {\n    json: {\n      video_id: item.json.video_id,\n      title: item.json.title,\n      transcription_text: fullText\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        0
+      ],
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1B1a3YM_EhK4ngjLQOaxLPFSc7gnMapm3RgzoUlJY1Ls",
+          "mode": "list",
+          "cachedResultName": "Youtube",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1B1a3YM_EhK4ngjLQOaxLPFSc7gnMapm3RgzoUlJY1Ls/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1B1a3YM_EhK4ngjLQOaxLPFSc7gnMapm3RgzoUlJY1Ls/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Title": "={{ $('Code in JavaScript').item.json.title }}",
+            "Video": "={{ $('Get dataset').item.json.url }}",
+            "descrption ": "={{ $('Get dataset').item.json.description }}",
+            "Interesting Facts About Him": "={{ $('Code in JavaScript').item.json.transcription_text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Video",
+              "displayName": "Video",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "descrption ",
+              "displayName": "descrption ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Interesting Facts About Him",
+              "displayName": "Interesting Facts About Him",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2256,
+        0
+      ],
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following YouTube video transcript and generate a single paragraph that summarizes the key trends and provides actionable steps, including relevant skills or tools to focus on:\n\ninput :{{ $('Get dataset').item.json.title }}\n{{ $('Get dataset').item.json.description }}\n{{ $json.transcription_text }}\n\nExample Output\n\n\"In 2026, AI trends include multi-agent orchestration where teams of AI agents collaborate under a coordinator to perform tasks efficiently, digital labor workforces using autonomous agents for workflow automation, and physical AI with robots trained in simulations interacting with the real world. To follow these trends, focus on learning AI agent development, workflow automation, robotics, and edge AI deployment, while exploring tools such as agentic platforms, humanoid robots, and inference-time computing models.\"",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an AI research assistant specialized in extracting actionable insights from video transcripts. \n\nYour task is to read the transcript and return a single paragraph that combines:\n\n1. A brief summary of the main points or trends discussed.\n2. Actionable steps or recommendations based on the content.\n3. Relevant skills, tools, or knowledge areas to learn or use.\n\nDo not add opinions or unrelated commentary. Keep it factual, concise, and fully contained in one paragraph.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1712,
+        0
+      ],
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "mistral-large-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        208
+      ],
+      "name": "Mistral Cloud Chat Model",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "ULrl5qHqTv9VVZF9",
+          "name": "Mistral Cloud monaimkali59"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [
+        1888,
+        208
+      ],
+      "name": "Auto-fixing Output Parser"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"trend_name\": \"\",\n  \"summary\": \"\",\n  \"skills_to_learn\": \"\",\n  \"tools_or_technologies\": \"\"\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2032,
+        416
+      ],
+      "name": "Structured Output Parser"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Youtoube",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Youtoube": {
+      "main": [
+        [
+          {
+            "node": "Get dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get dataset": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

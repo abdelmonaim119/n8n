@@ -1,0 +1,400 @@
+{
+  "id": "0wctB5J70E6eG128",
+  "name": "Serve - ClickUp API - MCP Task Operations",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nExposes ClickUp list/task operations as MCP tools.\n\nTrigger:\nMCP Server Trigger.\n\nProcess Summary:\n- Accept MCP tool invocation.\n- Execute ClickUp HTTP tool requests.\n- Return structured API responses to caller.\n\nOutput:\nCallable ClickUp task/list operations for assistants.\n\nOwner:\nAutomation Platform Owner",
+        "height": 380,
+        "width": 620,
+        "color": 7
+      },
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -844,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "This tool is used for folder operations",
+        "url": "=https://api.clickup.com/api/v2/space/{{$fromAI('space_id')}}/folder",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "clickUpOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('JSON', ``, 'json') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        -128,
+        176
+      ],
+      "name": "GetFolders",
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "W0mfmfLtFf9rHZB1",
+          "name": "ClickUp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.clickup.com/api/v2/team/90121389405/space",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "clickUpOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('JSON', ``, 'json') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        128,
+        160
+      ],
+      "name": "GetSpaces",
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "W0mfmfLtFf9rHZB1",
+          "name": "ClickUp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.clickup.com/api/v2/folder//list",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "clickUpOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('JSON', ``, 'json') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        352,
+        160
+      ],
+      "name": "GetList",
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "W0mfmfLtFf9rHZB1",
+          "name": "ClickUp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.clickup.com/api/v2/folder/{{fromAI('folder_id')}}/list",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "clickUpOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('JSON', ``, 'json') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        -144,
+        320
+      ],
+      "name": "CreateList",
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "W0mfmfLtFf9rHZB1",
+          "name": "ClickUp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.clickup.com/api/v2/space/{{ $fromAI('space_id')}}/list",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "clickUpOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('JSON', ``, 'json') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        112,
+        320
+      ],
+      "name": "GetFolderlessLists",
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "W0mfmfLtFf9rHZB1",
+          "name": "ClickUp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.clickup.com/api/v2/space/{{ $fromAI('space_id')}}/list",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "clickUpOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        352,
+        320
+      ],
+      "name": "CreateFolderlessList",
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "W0mfmfLtFf9rHZB1",
+          "name": "ClickUp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.clickup.com/api/v2/list/{{ $fromAI('list_id') }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "clickUpOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        -144,
+        464
+      ],
+      "name": "UpdateList",
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "W0mfmfLtFf9rHZB1",
+          "name": "ClickUp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.clickup.com/api/v2/list/{{ fromAI('list_id')}}/task",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "clickUpOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('JSON', ``, 'json') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        112,
+        448
+      ],
+      "name": "GetTasks",
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "W0mfmfLtFf9rHZB1",
+          "name": "ClickUp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.clickup.com/api/v2/list/{{ fromAI('list_id')}}/task",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "clickUpOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('JSON', ``, 'json') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        352,
+        448
+      ],
+      "name": "CreateTask",
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "W0mfmfLtFf9rHZB1",
+          "name": "ClickUp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "861f36be-9f44-4094-a8ff-262f9df71348"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "name": "MCP Server Trigger",
+      "webhookId": "861f36be-9f44-4094-a8ff-262f9df71348"
+    }
+  ],
+  "connections": {
+    "GetFolders": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "GetSpaces": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "GetList": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "CreateList": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "GetFolderlessLists": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "CreateFolderlessList": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "UpdateList": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "GetTasks": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "CreateTask": {
+      "ai_tool": [
+        []
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

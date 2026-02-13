@@ -1,0 +1,292 @@
+{
+  "id": "SthKkuWjqEDt3Oz5",
+  "name": "Enrich - CRM UI - Sheet-Driven Lead Actions",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nProcesses sheet-driven lead actions using AI and external HTTP lookups.\n\nTrigger:\nGoogle Sheets Trigger (currently disabled) or manual internal execution paths.\n\nProcess Summary:\n- Read lead row context.\n- Generate action recommendations with AI agent.\n- Run external HTTP enrichment step.\n- Write updates back to sheet/CRM state.\n\nOutput:\nUpdated lead records with AI-enriched action data.\n\nOwner:\nSales Operations",
+        "height": 380,
+        "width": 620,
+        "color": 7
+      },
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -940,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Function Node\n// Input: items[] where item.json = raw company data\n\nfunction generateId() {\n  return Date.now().toString() + Math.floor(Math.random() * 1000);\n}\n\nreturn items.map(item => {\n  const data = item.json;\n\n  return {\n    json: {\n      id: generateId(),\n      name: data.name || data.company || \"Company Admin\",\n      email: data.email || null,\n      phone: data[\"phone numbre\"] || data.phone || null,\n      company: data.company || data.name || \"Unknown Company\",\n      source: \"Google Maps\",\n      status: \"Active\",\n      owner: \"Nexus AI\",\n      tags: [\n        data.icategory || null,\n        data[\"size of company\"] || null\n      ].filter(Boolean)\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        0
+      ],
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=output_parser:\n  purpose: >\n    Automatically structure and clean the raw data fetched from MCP.\n    Ensure consistent formatting, correct missing fields where possible,\n    normalize dates, and organize by entity type.\n\n  rules:\n    - rule: ensure_entity_keys\n      description: >\n        Each entity (Contacts, Leads, Deals, Activities) must have all expected keys.\n        If a key is missing, fill with null or default value.\n        Contacts: id, name, email, phone, company, source, status, owner, tags, createdAt\n        Leads: id, name, company, source, status, value, probability, owner, lastActivity, score, createdAt\n        Deals: id, name, value, stage, probability, expectedClose, company, owner, createdAt\n        Activities: id, type, subject, relatedTo, description, dueDate, status, owner, createdAt\n\n    - rule: normalize_dates\n      description: >\n        All date fields must be converted to ISO 8601 format.\n        e.g., 2024-05-20T10:00:00Z\n        Fields include createdAt, expectedClose, dueDate, lastActivity\n\n    - rule: enforce_data_types\n      description: >\n        Ensure numeric fields are numbers (value, probability, score)\n        Strings remain strings, lists remain lists (tags should be split into array if comma-separated)\n\n    - rule: clean_text_fields\n      description: >\n        Trim whitespace, remove invalid characters, normalize casing for names and companies\n\n    - rule: dynamic_entity_handling\n      description: >\n        Return structured output with each entity as a separate key.\n        Example format:\n        {\n          \"contacts\": [...],\n          \"leads\": [...],\n          \"deals\": [...],\n          \"activities\": [...]\n        }\n\n    - rule: auto_fix_missing_relations\n      description: >\n        For Activities, if relatedTo does not match any Contact id, set to null\n        or flag for user review.\n\n  output_format: json\n  example_output: >\n    {\n      \"contacts\": [\n        {\n          \"id\": \"rec_12345\",\n          \"name\": \"Jane Doe\",\n          \"email\": \"jane@example.com\",\n          \"phone\": \"+1-555-0199\",\n          \"company\": \"Acme Corp\",\n          \"source\": \"Google Search\",\n          \"status\": \"Active\",\n          \"owner\": \"Nexus AI\",\n          \"tags\": [\"priority\",\"enterprise\"],\n          \"createdAt\": \"2024-05-20T10:00:00Z\"\n        }\n      ],\n      \"leads\": [\n        {\n          \"id\": \"lead_12345\",\n          \"name\": \"Jane Doe\",\n          \"company\": \"Acme Corp\",\n          \"source\": \"Web Form\",\n          \"status\": \"New\",\n          \"value\": 5000,\n          \"probability\": 25,\n          \"owner\": \"Nexus AI\",\n          \"lastActivity\": \"User submitted inquiry via landing page.\",\n          \"score\": 85,\n          \"createdAt\": \"2024-05-20T10:05:00Z\"\n        }\n      ],\n      \"deals\": [\n        {\n          \"id\": \"deal_12345\",\n          \"name\": \"Acme Expansion Phase 1\",\n          \"value\": 12000,\n          \"stage\": \"Discovery\",\n          \"probability\": 10,\n          \"expectedClose\": \"2024-06-30T00:00:00Z\",\n          \"company\": \"Acme Corp\",\n          \"owner\": \"Nexus AI\",\n          \"createdAt\": \"2024-05-20T10:10:00Z\"\n        }\n      ],\n      \"activities\": [\n        {\n          \"id\": \"act_12345\",\n          \"type\": \"Call\",\n          \"subject\": \"Introductory Discovery Call\",\n          \"relatedTo\": \"rec_12345\",\n          \"description\": \"Discuss automation requirements for the marketing team.\",\n          \"dueDate\": \"2024-05-22T00:00:00Z\",\n          \"status\": \"Pending\",\n          \"owner\": \"Nexus AI\",\n          \"createdAt\": \"2024-05-20T10:15:00Z\"\n        }\n      ]\n    }\n\nrequest:{{ $json.body.action }}{{ $json.body.data.limit }},{{ $json.body.query }}\n\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=system_message: |\n  You are an agent connected to the MCP server.\n  When a user sends a query, interpret it, execute the corresponding MCP action, \n  and return the actual results from the server. Always return data, not instructions.\n  If parameters are missing or ambiguous, ask the user to clarify before executing.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -48,
+        544
+      ],
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "mistral-large-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        976
+      ],
+      "name": "Mistral Cloud Chat Model",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "ULrl5qHqTv9VVZF9",
+          "name": "Mistral Cloud monaimkali59"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://coruscant-lorina-iliac.ngrok-free.dev/mcp/511c8dae-2d05-41d6-8b1f-ab2f83e337a1",
+        "serverTransport": "sse",
+        "include": "selected",
+        "includeTools": [
+          "Get_Contacts_"
+        ],
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        768
+      ],
+      "name": "MCP Client"
+    },
+    {
+      "parameters": {
+        "options": {
+          "prompt": "Instructions:\n--------------\n{instructions}\n--------------\nCompletion:\n--------------\n{completion}\n--------------\n\nAbove, the Completion did not satisfy the constraints given in the Instructions.\nError:\n--------------\n{error}\n--------------\n\nPlease try again. Please only respond with an answer that satisfies the constraints laid out in the Instructions:"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [
+        160,
+        768
+      ],
+      "name": "Auto-fixing Output Parser"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "  {\n      \"contacts\": [\n        {\n          \"id\": \"rec_12345\",\n          \"name\": \"Jane Doe\",\n          \"email\": \"jane@example.com\",\n          \"phone\": \"+1-555-0199\",\n          \"company\": \"Acme Corp\",\n          \"source\": \"Google Search\",\n          \"status\": \"Active\",\n          \"owner\": \"Nexus AI\",\n          \"tags\": [\"priority\",\"enterprise\"],\n          \"createdAt\": \"2024-05-20T10:00:00Z\"\n        }\n      ],\n      \"leads\": [\n        {\n          \"id\": \"lead_12345\",\n          \"name\": \"Jane Doe\",\n          \"company\": \"Acme Corp\",\n          \"source\": \"Web Form\",\n          \"status\": \"New\",\n          \"value\": 5000,\n          \"probability\": 25,\n          \"owner\": \"Nexus AI\",\n          \"lastActivity\": \"User submitted inquiry via landing page.\",\n          \"score\": 85,\n          \"createdAt\": \"2024-05-20T10:05:00Z\"\n        }\n      ],\n      \"deals\": [\n        {\n          \"id\": \"deal_12345\",\n          \"name\": \"Acme Expansion Phase 1\",\n          \"value\": 12000,\n          \"stage\": \"Discovery\",\n          \"probability\": 10,\n          \"expectedClose\": \"2024-06-30T00:00:00Z\",\n          \"company\": \"Acme Corp\",\n          \"owner\": \"Nexus AI\",\n          \"createdAt\": \"2024-05-20T10:10:00Z\"\n        }\n      ],\n      \"activities\": [\n        {\n          \"id\": \"act_12345\",\n          \"type\": \"Call\",\n          \"subject\": \"Introductory Discovery Call\",\n          \"relatedTo\": \"rec_12345\",\n          \"description\": \"Discuss automation requirements for the marketing team.\",\n          \"dueDate\": \"2024-05-22T00:00:00Z\",\n          \"status\": \"Pending\",\n          \"owner\": \"Nexus AI\",\n          \"createdAt\": \"2024-05-20T10:15:00Z\"\n        }\n      ]\n    }\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        256,
+        976
+      ],
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o",
+          "mode": "list",
+          "cachedResultName": "ScrapingGoogleMap",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "US",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        400,
+        0
+      ],
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        144
+      ],
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "PSBwd3hVKabROIKx",
+          "name": "Google Sheets Trigger account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://coruscant-lorina-iliac.ngrok-free.dev/webhook/0b433612-90d7-4c4b-9937-a7b8369eb8e8",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNDg0NDgzNy04NzQ1LTQyYWQtOTMxMi1jNWQyN2RlNzAwYjIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY3NDM1NzY2fQ.mHQGSi58SL8YW05F8nPZ_DtPPRrJKrb00i7tKjKh77M"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"action\": \"ADD_CONTACT\",\n  \"data\": {\n    \"id\": \"c_$(date +%s)\",\n    \"name\": \"Alex Riviera\",\n    \"email\": \"alex@nexus.io\",\n    \"company\": \"Riviera Tech\",\n    \"source\": \"CURL Push\",\n    \"tags\": \"Priority, New\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1024,
+        0
+      ],
+      "name": "HTTP Request"
+    }
+  ],
+  "connections": {
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

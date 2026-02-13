@@ -1,0 +1,1073 @@
+{
+  "id": "xqcMeZf7dB7xcmPL",
+  "name": "Generate - AI Agent - Workflow Draft Variants",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nTests multi-agent generation patterns to draft complex workflow outputs.\n\nTrigger:\nManual or scheduled trigger.\n\nProcess Summary:\n- Load source inputs and previous artifacts.\n- Run agent chains for draft generation.\n- Transform and format draft outputs.\n- Persist selected outputs to email/sheets.\n\nOutput:\nExperimental generated workflow/content drafts.\n\nOwner:\nAutomation R&D",
+        "height": 380,
+        "width": 620,
+        "color": 7
+      },
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1884,
+        -624
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Upwork Automation Workflow Prompt\n\nBelow are multiple Upwork job notifications.\n\nEach notification consists of:\n- **Tools**: Represents the software, APIs, or systems the client uses or wants to integrate.  \n- **Logic**: Represents the business rules, processes, or workflow logic that must be automated.\n\nAll tools and logic snippets belong to the same input batch and must be analyzed together.\n\n────────────────────────────  \n### TOOLS  \n────────────────────────────  \n{{ $json.tools }}\n\n────────────────────────────  \n### LOGIC  \n────────────────────────────  \n{{ $json.Logic }}\n\n────────────────────────────  \n### TASK  \n────────────────────────────  \n\nAll tasks must flow through the following workflow nodes and **must use the provided tools and logic**:\n\n1. **Input Node**  \n   Receives the task input (e.g., tools list and business logic).\n\n2. **Set Node**  \n   Extracts task metadata such as:\n   - Workflow triggers\n   - Conditions and rules\n   - Actions or steps\n   - Integration points\n   - Output requirements\n\n3. **IF / Switch Node**  \n   Routes execution based on conditions or decision points defined in the logic.\n\n4. **Model Execution Node**  \n   Executes the task using the system-level instructions provided.\n\n5. **Output Node**  \n   Returns the final result in the required format.\n\n────────────────────────────  \n### INTERNAL REASONING (REQUIRED)  \n────────────────────────────  \n\nBefore generating any output, you are **required to invoke the internal reasoning tool `think`** to deeply analyze **all tools and logic collectively**.\n\nThe internal reasoning must identify:\n\n- The most frequent, high-value, and technically complex automation challenges implied across the tools and logic  \n- Patterns or multi-step workflows that require synthesis across multiple logic snippets\n\n⚠️ **All reasoning must remain internal.**  \nDo **not** expose chain-of-thought, intermediate steps, or analytical commentary in the final output.\n\n────────────────────────────  \n### OUTPUT REQUIREMENTS  \n────────────────────────────  \n\nBased on the internal analysis, generate **exactly four (4) advanced automation workflows** that address the dominant client demands inferred from the tools and logic inputs.\n\n#### Workflow Distribution:\n- **Two (2)** workflows using **Make.com**  \n- **Two (2)** workflows using **n8n**\n\n#### Workflow Logic Guidelines:\n- **Trigger**: What event starts the workflow (e.g., new order, form submission)  \n- **Conditions / Rules**: When or how steps should execute (e.g., order > $500, location = EU)  \n- **Actions / Steps**: What happens after trigger and conditions are met (e.g., send email, update database, notify Slack)  \n- **Routing / Decision Points**: Branching logic such as IF/ELSE, Switch nodes, filters  \n- **Integration Points**: Which tools or APIs are called at each step  \n- **Output / Result**: What the workflow produces (e.g., reports, notifications, database updates)\n\n#### Constraints:\n- Workflows must be **enterprise-grade**, **high-complexity**, and **technically realistic**  \n- Do **not** map workflows one-to-one with individual logic snippets  \n- Respect all exclusions and system-level constraints  \n- Output **only** the four workflows  \n- Use the **required HTML structure**  \n- **No explanations, reasoning, summaries, or meta-commentary**\n",
+        "options": {
+          "systemMessage": "=# Senior Automation Architect Prompt (Single Model)\n\nYou are a senior automation architect with deep expertise in Make.com and n8n.  \nYou will design enterprise-grade automation workflows based on the provided tools and business logic.\n\n────────────────────────────────────────\nWORKFLOW LOGIC\n────────────────────────────────────────\nAll tasks will flow through the following nodes:\n\n1. **Input Node**: Receives a task (e.g., tools, business logic, or data).  \n2. **Set Node**: Extracts triggers, conditions, actions, integration points, and output requirements.  \n3. **IF/Switch Node**: Routes the task based on business logic conditions.  \n4. **Model Execution Node**: Runs the task using system-level instructions.  \n5. **Output Node**: Returns the result in the required format (e.g., HTML workflows).\n\n────────────────────────────────────────\nMANDATORY REASONING TOOL USAGE\n────────────────────────────────────────\nBefore generating any output, you are **required to invoke an internal reasoning tool (`think`)** to deeply analyze all tools and business logic collectively. Use it to:\n\n- Identify repeated pain points and common technical demands  \n- Detect high-value, complex automation needs  \n- Resolve ambiguity or multi-layered requirements  \n- Make informed decisions for enterprise-grade workflows\n\nAll reasoning must remain **internal**. Do **not** expose reasoning steps, intermediate analysis, or chain-of-thought in your final output. Only the final structured output is permitted.\n\n────────────────────────────────────────\nCORE INTERPRETATION RULES\n────────────────────────────────────────\nEach logic snippet represents a real business process.\n\nYou must read all logic snippets carefully, completely, and together.\n\nDo not treat snippets independently.\n\nAnalyze them collectively to identify:\n\n- Repeated pain points  \n- Common technical demands  \n- High-value, complex automation needs  \n\nPrioritize what clients most frequently and strongly demand, not edge cases.  \nThink before producing output. Assume shallow or rushed analysis is a failure.\n\n────────────────────────────────────────\nCORE OBJECTIVE\n────────────────────────────────────────\nDesign exactly four (4) advanced automation workflows based on the analysis:\n\n- Two (2) workflows using Make.com  \n- Two (2) workflows using n8n  \n\nRequirements:\n\n- Enterprise-grade, high-complexity, and technically realistic.  \n- Do not map workflows one-to-one with individual logic snippets.  \n- Follow all constraints, exclusions, and formatting rules defined in the system instructions.  \n- Output **only** the four workflows, in the required HTML structure.  \n- No reasoning, summaries, or meta-commentary.\n\n────────────────────────────────────────\nFINAL ENFORCEMENT RULES\n────────────────────────────────────────\n- Respond clearly, accurately, and concisely.  \n- Indicate when a task is outside your capabilities.  \n- Provide structured, well-formatted responses for complex data.  \n- No emotional language, persuasion, sales tone, or emojis.  \n- No assumptions not supported by snippet patterns.  \n- If snippets are complex → workflows must be complex.  \n\n────────────────────────────────────────\nREQUIRED HTML STRUCTURE (ENFORCED)\n────────────────────────────────────────\nEach workflow must follow this exact structure:\n\n<section class=\"workflow\">\n  <h2>Workflow X – [Make.com | n8n]</h2>\n\n  <h3>Primary Use Case</h3>\n  <p>Clear description of the business problem solved.</p>\n\n  <h3>Trigger & Ingress</h3>\n  <ul>\n    <li>Webhook / event source</li>\n    <li>Initial validation logic</li>\n  </ul>\n\n  <h3>Integrations</h3>\n  <ul>\n    <li>Tool / API 1</li>\n    <li>Tool / API 2</li>\n    <li>Tool / API 3+</li>\n  </ul>\n\n  <h3>Core Workflow Logic</h3>\n  <ul>\n    <li>Data normalization</li>\n    <li>Branching conditions</li>\n    <li>API orchestration</li>\n    <li>State management</li>\n  </ul>\n\n  <h3>Data Storage</h3>\n  <p>Description of persistent storage and schema usage.</p>\n\n  <h3>Error Handling & Resilience</h3>\n  <ul>\n    <li>Retries</li>\n    <li>Dead-letter handling</li>\n    <li>Fallback paths</li>\n  </ul>\n\n  <h3>Logging & Monitoring</h3>\n  <p>Logging strategy and observability tooling.</p>\n\n  <h3>Scaling Considerations</h3>\n  <p>Queueing, batching, rate-limit handling.</p>\n\n  <h3>Optional Dashboard / Reporting</h3>\n  <p>Metrics, KPIs, or operational visibility.</p>\n</section>\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        304,
+        320
+      ],
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "description": "Use think to perform internal deep reasoning across all job subjects and snippets before generating workflows. Call it whenever multiple inputs require cross-snippet analysis or complex automation solutions. Reasoning is internal; output only after analysis"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        544
+      ],
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "simple": false,
+        "filters": {
+          "q": "Upwork"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -816,
+        -16
+      ],
+      "name": "Get many messages",
+      "webhookId": "bb615259-79d9-493f-a218-e354ab80b83e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -144,
+        448
+      ],
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "html": "{{ $json.output }}"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        656,
+        320
+      ],
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "sendTo": "monaimabdel119@gmail.com",
+        "subject": "n8n",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        320
+      ],
+      "name": "Send a message",
+      "webhookId": "4ae462d2-ebd9-461f-9051-102cd574ef34",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_8023185167964751345"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1104,
+        320
+      ],
+      "name": "Add label to message",
+      "webhookId": "53cadaa8-255a-40b0-9ea7-59726536a75b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1jenhZfJrdItez8dtWM2jbXXIQeTAd12r7YMsBVYPfX4",
+          "mode": "list",
+          "cachedResultName": "skills Freq",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jenhZfJrdItez8dtWM2jbXXIQeTAd12r7YMsBVYPfX4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 48510732,
+          "mode": "list",
+          "cachedResultName": "Sheet3",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jenhZfJrdItez8dtWM2jbXXIQeTAd12r7YMsBVYPfX4/edit#gid=48510732"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "subject": "={{ $json.headers.subject }}",
+            "body": "={{ $json.text }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "body",
+              "displayName": "body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -368,
+        -80
+      ],
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1jenhZfJrdItez8dtWM2jbXXIQeTAd12r7YMsBVYPfX4",
+          "mode": "list",
+          "cachedResultName": "skills Freq",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jenhZfJrdItez8dtWM2jbXXIQeTAd12r7YMsBVYPfX4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 48510732,
+          "mode": "list",
+          "cachedResultName": "Sheet3",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jenhZfJrdItez8dtWM2jbXXIQeTAd12r7YMsBVYPfX4/edit#gid=48510732"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -816,
+        992
+      ],
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -592,
+        -16
+      ],
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me1",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input items from previous node\nconst items = $input.all();\n\n// Define batch size\nconst batchSize = 15;\n\n// Prepare output array\nconst output = [];\n\n// Loop through items in chunks of batchSize\nfor (let i = 0; i < items.length; i += batchSize) {\n    const chunk = items.slice(i, i + batchSize);\n\n    // Combine body and subject into comma-separated strings\n    const combinedBodies = chunk.map(item => item.json.body).join(', ');\n    const combinedSubjects = chunk.map(item => item.json.subject).join(', ');\n\n    // Push as a single new item\n    output.push({\n        json: {\n            body: combinedBodies,\n            subject: combinedSubjects\n        }\n    });\n}\n\n// Keep only the first 54 items\nreturn output.slice(0, 54);\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        992
+      ],
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1jenhZfJrdItez8dtWM2jbXXIQeTAd12r7YMsBVYPfX4",
+          "mode": "list",
+          "cachedResultName": "skills Freq",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jenhZfJrdItez8dtWM2jbXXIQeTAd12r7YMsBVYPfX4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1488690498,
+          "mode": "list",
+          "cachedResultName": "idea logic behinds",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jenhZfJrdItez8dtWM2jbXXIQeTAd12r7YMsBVYPfX4/edit#gid=1488690498"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Logic": "={{ $json.output }}"
+          },
+          "matchingColumns": [
+            "Logic"
+          ],
+          "schema": [
+            {
+              "id": "Logic",
+              "displayName": "Logic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        880
+      ],
+      "name": "Append or update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -368,
+        992
+      ],
+      "name": "Loop Over Items2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me2",
+      "typeVersion": 1,
+      "position": [
+        432,
+        992
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=### User Prompt (Strict)\nExtract ONLY explicit job tasks from the job description below.\n\nApply all system rules strictly.  \nReturn tasks only, one per line.  \nNo bullets, no numbering, no extra text.\n\nJob Description:\n{{ $json.body }}",
+        "options": {
+          "systemMessage": "=### System Message (Strict)\nYou are an information extraction engine.  \nYour sole function is to extract **explicit job tasks** from a job description.\n\nRules:\n- Output ONLY tasks.\n- Tasks must be explicitly stated in the text.\n- DO NOT infer, summarize, generalize, or rewrite.\n- DO NOT include skills, qualifications, tools, requirements, soft skills, goals, or outcomes.\n- DO NOT include vague responsibilities (e.g., “support,” “collaborate,” “ensure success”) unless paired with a concrete action.\n- DO NOT add headers, explanations, or commentary.\n- Preserve original meaning; minimal grammatical cleanup only.\n- One task per line.\n- If no explicit tasks exist, output EMPTY.\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -144,
+        880
+      ],
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": "mistral-large-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        1104
+      ],
+      "name": "Mistral Cloud Chat Model",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "RIms8TxQ2t3NWwfN",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Email Retrieval (Gmail)\n\n## This stage is responsible for fetching a large volume of emails from the connected Gmail account.\n\n## It is designed to efficiently handle bulk email data for further processing, filtering, and automation in the subsequent workflow steps.\n",
+        "height": 368,
+        "width": 1504,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1184,
+        -224
+      ],
+      "typeVersion": 1,
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# Extraction Logic\n\n## This stage extracts relevant data from the fetched emails based on predefined rules and conditions.\n\n## The logic focuses on identifying key fields such as sender details, subject, timestamps, and message content, ensuring only meaningful and structured data is passed to the next steps of the workflow.\n",
+        "height": 400,
+        "width": 1456,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -880,
+        752
+      ],
+      "typeVersion": 1,
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1jenhZfJrdItez8dtWM2jbXXIQeTAd12r7YMsBVYPfX4",
+          "mode": "list",
+          "cachedResultName": "skills Freq",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jenhZfJrdItez8dtWM2jbXXIQeTAd12r7YMsBVYPfX4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1026654729,
+          "mode": "list",
+          "cachedResultName": "Tools",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jenhZfJrdItez8dtWM2jbXXIQeTAd12r7YMsBVYPfX4/edit#gid=1026654729"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -592,
+        448
+      ],
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bd2a877c-55ad-4fdf-9f7c-a206820b1386",
+              "name": "tools",
+              "value": "={{ $json.Summray }}",
+              "type": "string"
+            },
+            {
+              "id": "b8e884a1-4287-4f96-8d92-7435d10b2fd9",
+              "name": "Logic",
+              "value": "={{ $json.Logic }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        64,
+        320
+      ],
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        320,
+        544
+      ],
+      "name": "Mistral Cloud Chat Model1",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "RIms8TxQ2t3NWwfN",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// get all input items\nconst items = $input.all();\n\n// initialize output array\nlet output = [];\n\n// batch size\nconst batchSize = 10;\n\n// loop through items in batches\nfor (let i = 0; i < items.length; i += batchSize) {\n    // slice the current batch of 10 items\n    const batch = items.slice(i, i + batchSize);\n\n    // aggregate Summray and Logic separately\n    const aggregatedSummray = batch.map(item => item.json.Summray).join(\", \"); // or use array if preferred\n    const aggregatedLogic = batch.map(item => item.json.Logic).join(\", \");\n\n    // push aggregated output as 1 item\n    output.push({\n        json: {\n            Summray: aggregatedSummray,\n            Logic: aggregatedLogic\n        }\n    });\n}\n\nreturn output.slice(4);\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        448
+      ],
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You must strictly follow the system message constraints.\n\nAdditional enforcement:\n- Treat all inputs as incomplete unless explicitly final.\n- Prefer architectural depth over breadth.\n- If a workflow seems simple, increase complexity through orchestration, resilience, or data modeling.\n- Never reduce complexity to improve clarity; instead, improve structure.\n- When choosing between tools, select those that better demonstrate senior-level automation expertise.\ninput of 7 gmails :\n{{ $json.text }}",
+        "options": {
+          "systemMessage": "=# Senior Automation Architect Prompt (Enterprise-Level)\n\nYou are a **senior automation architect** with deep, practical expertise in **Make.com** and **n8n**.  \nYour role is to design **high-complexity, enterprise-grade automation workflows** suitable for client presentations and real production use.\n\nYou operate with an **expert mindset**: architectural thinking, scalable design, fault tolerance, and multi-tool orchestration.\n\n---\n\n## WORKFLOW DESIGN CONTEXT\n\nInput to this system consists of:\n\n- **7 Gmail sources**\n- Each Gmail provides:\n  - **2 Make.com workflow suggestions**\n  - **2 n8n workflow suggestions**\n- Total input ideas = **14 workflows**\n\nThese inputs must be treated as **raw components**, not final solutions.\n\nYou must **select, merge, refactor, and elevate** them into a **smaller set of superior automations**.\n\n---\n\n## CORE OBJECTIVE\n\nFrom the 14 workflow suggestions, design **exactly four (4) final workflows**:\n\n- **Two (2) advanced workflows using Make.com**\n- **Two (2) advanced workflows using n8n**\n\nRules:\n\n- You may **combine multiple suggested workflows into one**\n- You may **discard weak or redundant ideas**\n- Final workflows must be **significantly more advanced** than any individual input\n- Each workflow must appear **expert-level and client-ready**\n\n---\n\n## MANDATORY COMPLEXITY & CLIENT IMPACT\n\nAll final workflows must:\n\n- Demonstrate **advanced logic** (branching, state, orchestration, retries)\n- Include **multiple integrations (3+)**\n- Solve **high-value business problems**, not simple tasks\n- Clearly communicate architectural thinking when reviewed by a client\n- Be realistic and technically implementable\n\nIf the inputs are simple, you must **elevate them**.  \nSimple workflows are considered a failure.\n\n---\n\n## TOOLING & FREE-TRIAL ENFORCEMENT\n\nYou are **strictly forbidden** from using tools that:\n\n- Require a **credit card** to access a free trial\n- Require paid plans to demonstrate core functionality\n\nYou must **prefer tools with**:\n\n- Free tier or free trial\n- No payment method required\n- Public APIs or native Make/n8n support\n\nIf a tool is questionable, **exclude it**.\n\n---\n\n## WORKFLOW LOGIC STANDARD\n\nEach workflow must internally follow this logical architecture:\n\n1. **Ingress / Trigger**\n   - Webhook, event, or scheduled trigger\n   - Input validation\n\n2. **Normalization & Enrichment**\n   - Data cleanup\n   - Schema alignment\n   - Context enrichment\n\n3. **Decision Layer**\n   - IF / Switch logic\n   - Conditional routing\n   - Priority handling\n\n4. **Execution & Orchestration**\n   - Multi-API coordination\n   - State tracking\n   - Async or sequential execution\n\n5. **Persistence & Observability**\n   - Storage of state, logs, or results\n   - Monitoring hooks\n\n6. **Resilience**\n   - Error handling\n   - Retries\n   - Fallback paths\n\n---\n\n## ANALYSIS & INTERPRETATION RULES\n\nYou must:\n\n- Analyze **all 14 suggestions together**\n- Identify:\n  - Repeated pain points\n  - Common technical demands\n  - High-value automation patterns\n- Prioritize **what real clients care about most**\n- Avoid edge cases unless they add clear value\n\nDo **not** map one workflow per suggestion.  \nThink in **systems**, not tasks.\n\n---\n\n## OUTPUT RULES (STRICT)\n\n- Output **only** the four final workflows\n- No explanations, reasoning, summaries, or commentary\n- No emojis, persuasion, or sales language\n- No assumptions not supported by the combined inputs\n- If requirements conflict, choose the **more enterprise-grade option**\n\n---\n\n## REQUIRED HTML STRUCTURE (ENFORCED)\n\nEach workflow **must** follow this exact structure:\n\n```html\n<section class=\"workflow\">\n  <h2>Workflow X – [Make.com | n8n]</h2>\n\n  <h3>Primary Use Case</h3>\n  <p>Clear description of the business problem solved.</p>\n\n  <h3>Trigger & Ingress</h3>\n  <ul>\n    <li>Webhook / event source</li>\n    <li>Initial validation logic</li>\n  </ul>\n\n  <h3>Integrations</h3>\n  <ul>\n    <li>Tool / API 1</li>\n    <li>Tool / API 2</li>\n    <li>Tool / API 3+</li>\n  </ul>\n\n  <h3>Core Workflow Logic</h3>\n  <ul>\n    <li>Data normalization</li>\n    <li>Branching conditions</li>\n    <li>API orchestration</li>\n    <li>State management</li>\n  </ul>\n\n  <h3>Data Storage</h3>\n  <p>Description of persistent storage and schema usage.</p>\n\n  <h3>Error Handling & Resilience</h3>\n  <ul>\n    <li>Retries</li>\n    <li>Dead-letter handling</li>\n    <li>Fallback paths</li>\n  </ul>\n\n  <h3>Logging & Monitoring</h3>\n  <p>Logging strategy and observability tooling.</p>\n\n  <h3>Scaling Considerations</h3>\n  <p>Queueing, batching, rate-limit handling.</p>\n\n  <h3>Optional Dashboard / Reporting</h3>\n  <p>Metrics, KPIs, or operational visibility.</p>\n</section>\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        224,
+        1712
+      ],
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "description": "Use think to perform internal deep reasoning across all job subjects and snippets before generating workflows. Call it whenever multiple inputs require cross-snippet analysis or complex automation solutions. Reasoning is internal; output only after analysis"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        1968
+      ],
+      "name": "Think1"
+    },
+    {
+      "parameters": {
+        "html": "{{ $json.output }}"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1296,
+        1712
+      ],
+      "name": "HTML1"
+    },
+    {
+      "parameters": {
+        "sendTo": "monaimabdel119@gmail.com",
+        "subject": "n8n",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1520,
+        1712
+      ],
+      "name": "Send a message1",
+      "webhookId": "4ae462d2-ebd9-461f-9051-102cd574ef34",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_8023185167964751345"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1744,
+        1712
+      ],
+      "name": "Add label to message1",
+      "webhookId": "53cadaa8-255a-40b0-9ea7-59726536a75b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "simple": false,
+        "filters": {
+          "labelIds": [
+            "Label_8023185167964751345"
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        1712
+      ],
+      "name": "Get many messages1",
+      "webhookId": "df103730-7366-4701-84a5-93ae1decc837",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Generating workflow scenarios\n",
+        "height": 416,
+        "width": 2448
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -880,
+        240
+      ],
+      "typeVersion": 1,
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      text: JSON.stringify($input.all().map(item => item.json.text))\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        1712
+      ],
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        96,
+        1920
+      ],
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "fHuRIUfWhTLD8E47",
+          "name": "Google Gemini(PaLM) Api monamabdel119"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        1872
+      ],
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 12,
+              "triggerAtMinute": 53
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -624,
+        1680
+      ],
+      "name": "Schedule Trigger"
+    }
+  ],
+  "connections": {
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Add label to message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add label to message": {
+      "main": [
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Replace Me1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Replace Me2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "HTML1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML1": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Add label to message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get many messages1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many messages1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

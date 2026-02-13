@@ -1,0 +1,486 @@
+{
+  "id": "DZnP2vX54hfNuFON",
+  "name": "Respond - Google Sheets - New Lead Qualification Email",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nQualifies newly added sheet leads and drafts/sends response messaging.\n\nTrigger:\nGoogle Sheets Trigger.\n\nProcess Summary:\n- Detect new lead row.\n- Evaluate qualification rules.\n- Generate response with AI agent/model.\n- Send Gmail tool message and update row state.\n\nOutput:\nLead response action completed and sheet status updated.\n\nOwner:\nOutbound SDR Team",
+        "height": 380,
+        "width": 620,
+        "color": 7
+      },
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        -416
+      ]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1jsf_JxWyZJw2qq65dYIhxv2nfV_Rjf9BFW_-7p3GbZM",
+          "mode": "list",
+          "cachedResultName": "lovable",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jsf_JxWyZJw2qq65dYIhxv2nfV_Rjf9BFW_-7p3GbZM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1841215479,
+          "mode": "list",
+          "cachedResultName": "Leads CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jsf_JxWyZJw2qq65dYIhxv2nfV_Rjf9BFW_-7p3GbZM/edit#gid=1841215479"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "PSBwd3hVKabROIKx",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4828ea16-9004-4aed-9d75-3a2297ffae12",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Done",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        0
+      ],
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Generate two HTML emails for a new lead:\n\nLead Name: {{ $json['Full Name'] }}\nLead Email: {{ $json['Email Address'] }}\n\n\n1. Lead Email:\n- Introduce workflow automation services\n- Highlight benefits: save 10–20+ hours/week, eliminate repetitive tasks, reliable systems\n- Encourage lead to reply with their workflow for a free automation plan\n- Include a call-to-action button\n\n2. Internal Notification Email:\n- Notify me that a new lead has been added to the CRM\n- Include lead’s name and email\n- Keep it short, clean, and easy to read\n\nReturn both emails as structured HTML.\n\nRole: Internal Notification Email Cleaner\n\nWhen generating internal notification emails, do NOT include any automatic footer or system-generated text such as:\n\"This email was sent automatically with n8n\"  \nor any similar messages indicating automation.  \n\nThe email should be clean, professional, and only contain:  \n- Greeting  \n- Lead information (name and email)  \n- Follow-up instruction if applicable  \n- Your signature: K.Abdelmonam\n"
+            }
+          ]
+        },
+        "jsonOutput": "={{ false }}",
+        "options": {
+          "systemMessage": "=You are an AI assistant specialized in creating professional, persuasive emails for workflow automation services.  \n\nYou have the following expertise:  \n- Workflow Automation  \n- Tools: n8n, Make.com, Zapier  \n- Programming: Python, API integrations  \n- Experience: Building robust, scalable automation for e-commerce, real estate, SaaS, healthcare, education, finance, and complex business operations  \n- Service goal: Help businesses save 10–20+ hours per week by eliminating repetitive tasks  \n- Pricing: $10/hr  \n\nYour task is to generate **two HTML emails** whenever requested:  \n\n1. **Lead Email:**  \n   - A polished, persuasive email to a potential client  \n   - Introduce the service and explain the value  \n   - Encourage them to share their workflow for a free automation plan  \n\n2. **Internal Notification Email:**  \n   - A simple, structured notification email to alert the owner or team when a new lead is added to the CRM  \n   - Include the lead’s name and email  \n\n**Requirements for emails:**  \n- Professionally formatted HTML with responsive styling  \n- Clear headings, paragraphs, and call-to-action buttons  \n- Clean and modern design with appropriate branding colors  \n- Easy to read and visually appealing  \n\nAlways ask for the client’s name and email when generating these emails.  \n\nYou must return **ONLY valid JSON** in the following format:  \n\n{\n  \"Lead Email\": \"<HTML as a single string, with quotes escaped if needed>\",  \n  \"Internal Notification Email\": \"<HTML as a single string, with quotes escaped if needed>\"\n}  \n\nDo NOT include any explanations, extra text, or markdown.  \nAll HTML must be included as a single-line JSON string.  \nEscape all double quotes inside HTML as \\\". Replace line breaks with \\n.  \n\n**Signature:**  \nK.Abdelmonam\n\n\nRole: Internal Notification Email Cleaner\n\nWhen generating internal notification emails, do NOT include any automatic footer or system-generated text such as:\n\"This email was sent automatically with n8n\"  \nor any similar messages indicating automation.  \n\nThe email should be clean, professional, and only contain:  \n- Greeting  \n- Lead information (name and email)  \n- Follow-up instruction if applicable  \n- Your signature: K.Abdelmonam\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        464,
+        -16
+      ],
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "U4Q7jtrhOhAL6wJx",
+          "name": "Google Gemini(PaLM) Api Monaimabdo119"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You have received the following JSON object:\n{{ $json.content.parts[0].text }}\n\nInstructions:\n\n1. Send the \"Internal Notification Email\" to monaimabdel119@gmail.com\n   - Subject: \"New Lead Added\"\n   - HTML content: Use exactly as provided.\n\n2. Send the \"Lead Email\" to the lead\n   - Subject: \"Unlock 10+ Hours/Week: Your Path to Smarter Operations\"\n   - Include the following call-to-actions:\n     - Schedule an appointment: https://calendar.app.google/pGXx8rNpVjymUL4u6\n     - View my Upwork profile: https://www.upwork.com/freelancers/motivation?mp_source=share\n   - Ensure the HTML remains valid and visually appealing.\n\n3. Return only the following JSON confirming success:\n\n{\n  \"Internal Notification Email Status\": \"Sent\",\n  \"Lead Email Status\": \"Sent\"\n}\n\nRole: Internal Notification Email Cleaner\n\nWhen generating internal notification emails, do NOT include any automatic footer or system-generated text such as:\n\"This email was sent automatically with n8n\"  \nor any similar messages indicating automation.  \n\nThe email should be clean, professional, and only contain:  \n- Greeting  \n- Lead information (name and email)  \n- Follow-up instruction if applicable  \n- Your signature: K.Abdelmonam\n",
+        "options": {
+          "systemMessage": "=You are an AI assistant responsible for managing new leads for workflow automation services. \n\nIncoming JSON format:\n\n{\n  \"Lead Email\": \"<HTML content for lead>\",\n  \"Internal Notification Email\": \"<HTML content for internal notification>\"\n}\n\nYour tasks:\n\n1. **Send the Internal Notification Email**:\n   - Send to my Gmail address: monaimabdel119@gmail.com\n   - Subject line: \"New Lead Added\"\n   - Use the HTML content from \"Internal Notification Email\" as the email body.\n   - Do not alter the HTML content.\n\n2. **Send the Lead Email**:\n   - Send to the lead's email address (found inside the \"Lead Email\" HTML content)\n   - Subject line: \"Unlock 10+ Hours/Week: Your Path to Smarter Operations\"\n   - Include a clear call-to-action:\n     - Appointment link: https://calendar.app.google/pGXx8rNpVjymUL4u6\n     - Upwork profile: https://www.upwork.com/freelancers/motivation?mp_source=share\n   - HTML content should remain intact. If needed, append these links clearly in a button or paragraph for the lead to schedule an appointment or visit your profile.\n\nRequirements:\n- Emails must be valid HTML and ready to send.\n- Do not modify the HTML except to append the appointment and Upwork links if needed.\n- After sending, return a JSON confirmation:\n\n{\n  \"Internal Notification Email Status\": \"Sent\",\n  \"Lead Email Status\": \"Sent\"\n}\n\nRole: Internal Notification Email Cleaner\n\nWhen generating internal notification emails, do NOT include any automatic footer or system-generated text such as:\n\"This email was sent automatically with n8n\"  \nor any similar messages indicating automation.  \n\nThe email should be clean, professional, and only contain:  \n- Greeting  \n- Lead information (name and email)  \n- Follow-up instruction if applicable  \n- Your signature: K.Abdelmonam\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        816,
+        -16
+      ],
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        208
+      ],
+      "name": "Send a message in Gmail",
+      "webhookId": "433f2dfc-a01d-4fbc-b9e2-b76f0b1bea15",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "mistral-large-2512",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        704,
+        112
+      ],
+      "name": "Mistral Cloud Chat Model",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "RIms8TxQ2t3NWwfN",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1jsf_JxWyZJw2qq65dYIhxv2nfV_Rjf9BFW_-7p3GbZM",
+          "mode": "list",
+          "cachedResultName": "lovable",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jsf_JxWyZJw2qq65dYIhxv2nfV_Rjf9BFW_-7p3GbZM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1841215479,
+          "mode": "list",
+          "cachedResultName": "Leads CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jsf_JxWyZJw2qq65dYIhxv2nfV_Rjf9BFW_-7p3GbZM/edit#gid=1841215479"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email Address": "=",
+            "Lead ID": "={{ $('Google Sheets Trigger').item.json['Lead ID'] }}",
+            "Status": "Done"
+          },
+          "matchingColumns": [
+            "Lead ID"
+          ],
+          "schema": [
+            {
+              "id": "time",
+              "displayName": "time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lead ID",
+              "displayName": "Lead ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Address",
+              "displayName": "Email Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Title",
+              "displayName": "Job Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Industry",
+              "displayName": "Industry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company Size",
+              "displayName": "Company Size",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Country",
+              "displayName": "Country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Interested Service",
+              "displayName": "Interested Service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message / Notes",
+              "displayName": "Message / Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lead Score",
+              "displayName": "Lead Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Enriched Data – LinkedIn / Domain / Website",
+              "displayName": "Enriched Data – LinkedIn / Domain / Website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Assigned To",
+              "displayName": "Assigned To",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Next Step",
+              "displayName": "Next Step",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1168,
+        -16
+      ],
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

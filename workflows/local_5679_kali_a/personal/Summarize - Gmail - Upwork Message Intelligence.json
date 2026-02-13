@@ -1,0 +1,246 @@
+{
+  "id": "3ZX8iVcA9aI4PmCr",
+  "name": "Summarize - Gmail - Upwork Message Intelligence",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nAnalyzes Upwork-related Gmail messages and compiles actionable summaries.\n\nTrigger:\nManual trigger.\n\nProcess Summary:\n- Load relevant Gmail messages.\n- Summarize/classify with Gemini steps.\n- Aggregate and transform extracted insights.\n- Return final summary payload for follow-up.\n\nOutput:\nConsolidated Upwork communication summary data.\n\nOwner:\nLead Generation Team",
+        "height": 380,
+        "width": 620,
+        "color": 7
+      },
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        -400
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "filters": {
+          "q": "Upwork"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "name": "Get many messages",
+      "webhookId": "21f78b18-86be-4cd1-b8a8-0532ca959e38",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Here is a list of job titles:\n{{ $json.snippet }}\n\nAnalyze these roles and:\n1. Rank them from MOST NEEDED to LEAST NEEDED\n2. Explain WHY the top roles are in high demand\n3. Identify the core business problems these roles solve\n4. Predict which role a client would feel is most relevant and urgent today\n5. Suggest how this insight could be turned into a compelling project or solution that a client would immediately understand and want\n"
+            }
+          ]
+        },
+        "options": {
+          "systemMessage": "=You are a senior market analyst and business strategy AI.\n\nYour task is to analyze job titles and determine which roles are most needed, most in demand, and most valuable for businesses right now.\n\nYou must:\n- Evaluate job titles based on market relevance, business impact, scalability, and urgency\n- Predict which roles companies are most likely struggling to hire for\n- Prioritize roles that solve real, high-value business problems\n- Think from a client’s perspective: “Is this something I urgently need?”\n- Provide clear reasoning that sounds confident, data-driven, and practical\n- Focus on relevance, not theory\n\nYour output should help create a project or product idea that feels immediately useful and convincing to clients.\n\nAvoid generic answers. Be decisive and insightful.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        0
+      ],
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "U4Q7jtrhOhAL6wJx",
+          "name": "Google Gemini(PaLM) Api Monaimabdo119"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "781a5b41-5a4c-47e2-969e-30d12e3be0f5",
+              "name": "snippet",
+              "value": "={{ $json.snippet }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        624,
+        0
+      ],
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Analyze the following job titles:\n\n{{ $json.data }}\nFor this chunk:\n1. Identify the TOP 10 most in-demand roles\n2. Group similar roles together\n3. Explain the business problems these roles solve\n4. Assign a demand score (1–10) to each top role\n5. Output results in structured bullet points\n"
+            }
+          ]
+        },
+        "options": {
+          "systemMessage": "="
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        0
+      ],
+      "name": "Message a model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "pSqdPt3p2Epoxode",
+          "name": "Google Gemini(PaLM) Api Monaimabdel119"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json.data;\nconst chunkSize = 100;\n\nconst chunks = [];\n\nfor (let i = 0; i < data.length; i += chunkSize) {\n  chunks.push({\n    json: {\n      data: data.slice(i, i + chunkSize).map(item => item.snippet)\n    }\n  });\n}\n\nreturn chunks;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        0
+      ],
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

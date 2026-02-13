@@ -1,0 +1,144 @@
+{
+  "id": "Yxy2680lqlw8nbdF",
+  "name": "Log - Webhook - Call Records to Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nLogs inbound webhook call data into a persistent sheet table.\n\nTrigger:\nWebhook trigger.\n\nProcess Summary:\n- Receive call payload.\n- Append structured call record to Google Sheets.\n\nOutput:\nPersisted call log rows in Google Sheets.\n\nOwner:\nSupport Operations",
+        "height": 380,
+        "width": 620,
+        "color": 7
+      },
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        -352
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "=4fd1b05a-7054-4e85-9d12-dfadef621802",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        48
+      ],
+      "name": "Webhook",
+      "webhookId": "4fd1b05a-7054-4e85-9d12-dfadef621802"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1lYI7nzdRwOsjfz8AyPGHqP5u-aQV142DeNBuMFbdTL8",
+          "mode": "list",
+          "cachedResultName": "CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lYI7nzdRwOsjfz8AyPGHqP5u-aQV142DeNBuMFbdTL8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 583759871,
+          "mode": "list",
+          "cachedResultName": "Call Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lYI7nzdRwOsjfz8AyPGHqP5u-aQV142DeNBuMFbdTL8/edit#gid=583759871"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Summary": "={{ $json.body.message.analysis.summary }}",
+            "Outcome": "={{ $json.body.message.analysis.structuredData.call_purpose }} {{ $json.body.message.analysis.structuredData.appointment_details.type }}",
+            "Date": "={{ $json.body.message.timestamp }}",
+            "Error": "="
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Outcome",
+              "displayName": "Outcome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Error",
+              "displayName": "Error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        256,
+        48
+      ],
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

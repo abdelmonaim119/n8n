@@ -1,0 +1,645 @@
+{
+  "id": "Gb31VyNsaWGumv9o",
+  "name": "Capture - Upwork - Qualified Lead Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nScrapes Upwork opportunities, qualifies them, and stores leads for outreach.\n\nTrigger:\nSchedule Trigger.\n\nProcess Summary:\n- Run Apify actor for Upwork data.\n- Use AI parsing and qualification logic.\n- Filter non-matching opportunities.\n- Append qualified leads to Google Sheets.\n\nOutput:\nQualified Upwork leads in outreach pipeline sheet.\n\nOwner:\nLead Generation Team",
+        "height": 380,
+        "width": 620,
+        "color": 7
+      },
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "model": "mistral-large-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        704,
+        1008
+      ],
+      "name": "Mistral Cloud Chat Model",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "ULrl5qHqTv9VVZF9",
+          "name": "Mistral Cloud monaimkali59"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following jobs and return a decision for each job.\n\nFor each job, output a JSON object with the fields:\n\"keyword ofsearch\", \"Job Title\", \"Budget\", \"Posted On\", \"Job URL\", \"Description\", \"Tags\", \"Decision\", \"Reason\", \"Accepted\".\n\nRules:\n- Jobs older than 18 hours from the current time ({now}) should be refused with:\n    Decision = \"Refused\", Reason = \"job older than 18 hours\", Accepted = false.\n- Before processing a job, check in the Google Sheet using the tool \"Get row(s) in sheet in Google Sheets\":\n    - Search column: \"Job URL\"\n    - Search value: the job's URL\n    - If a match is found, **ignore the job** and do not include it in the output.\n- Process all jobs sequentially until every job has a decision or is ignored.\n\nInput:\n- related search and Job data and Job posted on and\nand publishTime and current_time: \n{{ $json.title }}\n{{ $json.link }}\n{{ JSON.stringify($json.data) }}\n\n{{\n(() => {\n  const now = new Date();\n  const year = now.getFullYear();\n  const month = String(now.getMonth() + 1).padStart(2, '0');\n  const day = String(now.getDate()).padStart(2, '0');\n  const hours = String(now.getHours()).padStart(2, '0');\n  const minutes = String(now.getMinutes()).padStart(2, '0');\n\n  return `${year}-${month}-${day} ${hours}:${minutes}`;\n})()\n}}\n\n- Job URL template: https://www.upwork.com/jobs/<ciphertext>\n\nOutput:\n- JSON array of job objects with the decision and boolean Accepted field included.\n- Exclude jobs already existing in the Google Sheet.\n- Leave missing fields empty.\n-each job must have his url by https://www.upwork.com/jobs/<ciphertext>\nciphertext example:~022010565243540932846",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an AI assistant tasked with analyzing job listings and returning a decision for each job.\n\nRequirements:\n\n1. Input may contain multiple job listings at once. Process each job individually.\n2. Before returning a decision, check if the job already exists in the Google Sheet:\n   - Use the tool \"Get row(s) in sheet in Google Sheets\".\n   - Search column: \"Job URL\"\n   - Search value: the job's URL\n   - If a match is found, ignore the job and do not return it in the output.\n3. For each job, return a JSON object with the following fields:\n   - \"keyword ofsearch\"\n   - \"Job Title\"\n   - \"Budget\"\n   - \"Posted On\"\n   - \"Job URL\":\"-each job must have his url by https://www.upwork.com/jobs/<ciphertext>\n\"  - \"Description\"\n   - \"Tags\" (array)\n   - \"Decision\" (either \"Accepted\" or \"Refused\")\n   - \"Reason\" (if refused, specify why: \"skills do not match\" or \"job older than 18 hours\")\n   - \"Accepted\" (boolean: true if Decision = \"Accepted\", false if Decision = \"Refused\")\n4. Filter rules:\n   - If the job is older than 18 hours relative to the current time ({now}), set Decision = \"Refused\", Reason = \"job older than 18 hours\", Accepted = false.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        672,
+        480
+      ],
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [
+        752,
+        704
+      ],
+      "name": "Auto-fixing Output Parser1"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "[\n  {\n    \"keyword ofsearch\": \"\",\n    \"Job Title\": \"\",\n    \"Budget\": \"\",\n    \"Posted On\": \"\",\n    \"Job URL\": \"\",\n    \"Description\": \"\",\n    \"Tags\": [],\n    \"Accepted\": false,\n    \"Decision\": \"Refused\",\n    \"Reason\": \"job older than 18 hours / already exists\",\n    \"how many time the job published\": 0,\n    \"ignored\": false\n  },\n  {\n    \"keyword ofsearch\": \"\",\n    \"Job Title\": \"\",\n    \"Budget\": \"\",\n    \"Posted On\": \"\",\n    \"Job URL\": \"\",\n    \"Description\": \"\",\n    \"Tags\": [],\n    \"Accepted\": true,\n    \"Decision\": \"Accepted\",\n    \"Reason\": \"\",\n    \"how many time the job published\": 1,\n    \"ignored\": false\n  },\n  {\n    \"keyword ofsearch\": \"\",\n    \"Job Title\": \"\",\n    \"Budget\": \"\",\n    \"Posted On\": \"\",\n    \"Job URL\": \"\",\n    \"Description\": \"\",\n    \"Tags\": [],\n    \"Accepted\": false,\n    \"Decision\": \"Ignored\",\n    \"Reason\": \"job already exists in sheet\",\n    \"how many time the job published\": 1,\n    \"ignored\": true\n  }\n]\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        864,
+        912
+      ],
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        480
+      ],
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorId": {
+          "__rl": true,
+          "value": "QRHJxnLxIAxpfHCcu",
+          "mode": "list",
+          "cachedResultName": "Upwork Job Extractor ⚡ (flash_mage/upwork)",
+          "cachedResultUrl": "https://console.apify.com/actors/QRHJxnLxIAxpfHCcu/input"
+        },
+        "customBody": "={\n  \"query\": [\n  \"Artificial Intelligence\",\n  \"AI Developer\",\n  \"AI Consultant\",\n  \"AI Solutions\",\n  \"AI Engineer\"\n\n  ],\n  \"Limit\": 5,\n  \"sort\": \"newest\",\n  \"hourly\": true,\n  \"hourly_min_price\": 50,\n  \"hourly_max_price\": 200,\n  \"fixed\": true,\n  \"fixed_prices\": [\n    \"500-999\",\n    \"1000-4999\",\n    \"5000-\"\n  ],\n  \"fixed_min_price\": 500,\n  \"fixed_max_price\": 5000,\n  \"experience_level\": [\n    \"ExpertLevel\"\n  ],\n  \"client_history\": [\n    \"10-\"\n  ],\n  \"project_length\": [\n    \"month\",\n    \"semester\",\n    \"ongoing\"\n  ],\n  \"hours_per_week\": [\n    \"part_time\",\n    \"full_time\"\n  ],\n  \"contract_to_hire_roles\": true\n}\n\n"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        224,
+        480
+      ],
+      "name": "Run an Actor and get dataset",
+      "credentials": {
+        "apifyApi": {
+          "id": "n1bLRl9m2QbK3vnh",
+          "name": "Apify account monaimK9"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Classify and score the following job:\n\n{{ JSON.stringify($json.output) }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# SYSTEM ROLE: Job Classification & Difficulty Scoring Engine\n\nYou are an analytical classification engine.\nYour task is to analyze any given job description and classify it objectively.\n\nYou must:\n- Ignore hype, marketing language, and emotional wording\n- Focus strictly on real work required\n- Think like an operations analyst + senior technical lead\n\n---\n\n## CORE OBJECTIVES\n\nFor every job input, you MUST:\n\n1. Extract the job URL if present in the input (or return null)\n2. Classify the job into one primary category\n3. Assign a difficulty score (0–100)\n4. Explain the reasoning concisely and structurally\n5. Output results in a fixed, machine-readable structure\n\n---\n\n## JOB CATEGORIES (EXHAUSTIVE)\n\nClassify into ONE primary category only.\n\nA. LOW-SKILL / COMMODITY  \nB. TOOL OPERATION  \nC. SYSTEM INTEGRATION  \nD. PROCESS AUTOMATION  \nE. DECISION SUPPORT  \nF. MAINTENANCE & RELIABILITY  \nG. COMPLIANCE / RISK  \n\n(Definitions unchanged.)\n\n---\n\n## DIFFICULTY SCORE (0–100)\n\nCompute difficulty using weighted factors:\n\n1. Technical Complexity (0–25)\n2. Context & Domain Knowledge (0–20)\n3. Responsibility / Risk (0–20)\n4. Ambiguity & Edge Cases (0–15)\n5. Replaceability by AI / Templates (0–20, inverse)\n\nRules:\n- High replaceability → lower score\n- Internal, messy, long-term jobs → higher score\n- Easy to explain, hard to own → high score\n\n---\n\n## OUTPUT FORMAT (STRICT)\n\nReturn ONLY the following structure:\n\n{\n  \"job_url\": \"string or null\",\n  \"job_summary\": \"string\",\n  \"category\": \"string\",\n  \"difficulty_score\": number,\n  \"difficulty_level\": \"string\",\n  \"key_factors\": {\n    \"technical_complexity\": number,\n    \"context_knowledge\": number,\n    \"responsibility_risk\": number,\n    \"ambiguity\": number,\n    \"ai_replaceability\": number\n  },\n  \"reasoning\": [\n    \"string\",\n    \"string\",\n    \"string\"\n  ]\n}\n\nRules:\n- If no URL is present, job_url must be null\n- Do not invent URLs\n- Do not omit the job_url field\n\nNo emojis.\nNo opinions.\nNo advice.\nNo extra text.\nNo markdown.\nNo commentary.\n\nFailure to follow format = invalid output.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1360,
+        352
+      ],
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        576
+      ],
+      "name": "Auto-fixing Output Parser"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"job_url\": \"string or null\",\n  \"job_summary\": \"string\",\n  \"category\": \"string\",\n  \"difficulty_score\": \"number\",\n  \"difficulty_level\": \"string\",\n  \"key_factors\": {\n    \"technical_complexity\": \"number\",\n    \"context_knowledge\": \"number\",\n    \"responsibility_risk\": \"number\",\n    \"ambiguity\": \"number\",\n    \"ai_replaceability\": \"number\"\n  },\n  \"reasoning\": [\n    \"string\",\n    \"string\",\n    \"string\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1424,
+        784
+      ],
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6c7fb2e9-e707-46bc-ae73-4c8ca0b6ed13",
+              "leftValue": "={{ Number($json.output.difficulty_score) }}",
+              "rightValue": 75,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1712,
+        352
+      ],
+      "name": "Filter",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1jWguNwCk-ROfa46I6Ea3R_8D1BiveJ2eBtGeOQI4mjw",
+          "mode": "list",
+          "cachedResultName": "Upgrade level",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jWguNwCk-ROfa46I6Ea3R_8D1BiveJ2eBtGeOQI4mjw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jWguNwCk-ROfa46I6Ea3R_8D1BiveJ2eBtGeOQI4mjw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "output"
+          ],
+          "schema": [
+            {
+              "id": "output",
+              "displayName": "output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2160,
+        528
+      ],
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c197be29-5984-4a4c-bd8c-d15ccaa9c230",
+              "name": "job_url",
+              "value": "={{ $json.output.job_url }}",
+              "type": "string"
+            },
+            {
+              "id": "cc4ba9b4-a952-4a86-8ae4-17c32ead3c48",
+              "name": "difficulty_score",
+              "value": "={{ $json.output.difficulty_score }}",
+              "type": "string"
+            },
+            {
+              "id": "164096c6-919d-4d4a-a791-e52b3e45aa19",
+              "name": "difficulty_level",
+              "value": "={{ $json.output.difficulty_level }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1936,
+        352
+      ],
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        480
+      ],
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "87dd5f0a-ffd1-43f4-adc2-1f84046d7fb4",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        352
+      ],
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "https://jobs.ams.at/public/emps/jobs?page=1&query=automation&location=&JOB_OFFER_TYPE=SB_WKO&JOB_OFFER_TYPE=IJ&JOB_OFFER_TYPE=BA&JOB_OFFER_TYPE=TN&JOB_OFFER_TYPE=BZ&PERIOD=ALL&sortField=_SCORE",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        0,
+        192
+      ],
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.data }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an information extraction and normalization engine for job postings.\n\nYour task:\n- Read job listings provided in any language (including raw HTML or scraped text)\n- Translate all content into English\n- Extract all relevant information\n- Output a single JSON object that strictly follows the schema below\n- Do not include commentary, explanations, or extra text outside the JSON\n\nRules:\n- Always translate into English\n- Always normalize fields into the schema\n- If a field is missing, use null or an empty array\n- Do not invent data\n- Convert salaries to numeric values when possible\n- Remove marketing language and keep factual meaning\n- Do not include HTML or formatting in output\n\nRequired JSON schema:\n\n{\n  \"job_id\": \"\",\n  \"company\": {\n    \"name\": \"\",\n    \"address\": \"\",\n    \"website\": \"\",\n    \"industry\": \"\"\n  },\n  \"position\": {\n    \"title\": \"\",\n    \"department\": \"\",\n    \"employment_type\": \"\",\n    \"location\": \"\",\n    \"seniority\": \"\"\n  },\n  \"description\": {\n    \"summary\": \"\",\n    \"product_area\": \"\",\n    \"mission\": \"\"\n  },\n  \"responsibilities\": [],\n  \"requirements\": {\n    \"experience\": [],\n    \"technical\": [],\n    \"soft_skills\": [],\n    \"languages\": []\n  },\n  \"compensation\": {\n    \"currency\": \"\",\n    \"min\": null,\n    \"max\": null,\n    \"period\": \"\",\n    \"negotiable\": false\n  },\n  \"training\": [],\n  \"benefits\": [],\n  \"application\": {\n    \"contact_name\": \"\",\n    \"email\": \"\",\n    \"phone\": \"\",\n    \"apply_url\": \"\"\n  }\n}\n\nOutput format:\nReturn only valid JSON matching the schema above.\nNo markdown.\nNo comments.\nNo trailing text.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        192
+      ],
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [
+        512,
+        224
+      ],
+      "name": "Auto-fixing Output Parser2"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"job_id\": \"\",\n  \"company\": {\n    \"name\": \"\",\n    \"address\": \"\",\n    \"website\": \"\",\n    \"industry\": \"\"\n  },\n  \"position\": {\n    \"title\": \"\",\n    \"department\": \"\",\n    \"employment_type\": \"\",\n    \"location\": \"\",\n    \"seniority\": \"\"\n  },\n  \"description\": {\n    \"summary\": \"\",\n    \"product_area\": \"\",\n    \"mission\": \"\"\n  },\n  \"responsibilities\": [],\n  \"requirements\": {\n    \"experience\": [],\n    \"technical\": [],\n    \"soft_skills\": [],\n    \"languages\": []\n  },\n  \"compensation\": {\n    \"currency\": \"\",\n    \"min\": 0,\n    \"max\": 0,\n    \"period\": \"\",\n    \"negotiable\": false\n  },\n  \"training\": [],\n  \"benefits\": [],\n  \"application\": {\n    \"contact_name\": \"\",\n    \"email\": \"\",\n    \"phone\": \"\",\n    \"apply_url\": \"\"\n  }\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        656,
+        352
+      ],
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "model": "z-ai/glm-4.5-air:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        112,
+        448
+      ],
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "ctbR2LAfHA2bnaOM",
+          "name": "OpenRouter account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Auto-fixing Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Auto-fixing Output Parser2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run an Actor and get dataset": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser2",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

@@ -1,0 +1,143 @@
+{
+  "id": "LUU5CRjVCCjEGcTI",
+  "name": "Respond - Webhook - Gemini Generated Reply",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nReceives webhook input, generates model output, and returns a direct response.\n\nTrigger:\nWebhook trigger.\n\nProcess Summary:\n- Accept webhook payload.\n- Transform input in code step.\n- Generate response with Gemini model.\n- Return response via Respond to Webhook node.\n\nOutput:\nSynchronous AI-generated webhook response.\n\nOwner:\nAutomation R&D",
+        "height": 380,
+        "width": 620,
+        "color": 7
+      },
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "53579a8b-7428-4dce-8bf1-d8c93ac99130",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "name": "Webhook",
+      "webhookId": "53579a8b-7428-4dce-8bf1-d8c93ac99130"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=━━━━━━━━━━━━━━━━━━━━━━\nUSER MEDICAL INPUT\n━━━━━━━━━━━━━━━━━━━━━━\n{{ $json.body.query }}\n"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {
+          "systemMessage": "=You are a senior medical doctor AI.\n\nYou provide evidence-based, safety-first medical reasoning across all major medical fields.\nYou are conservative, probability-aware, and explicit about uncertainty.\n\nYou are NOT a chatbot, FAQ writer, or health blog.\nGeneric, vague, or reusable answers are forbidden.\n\n━━━━━━━━━━━━━━━━━━━━━━\nRESPONSE RULES\n━━━━━━━━━━━━━━━━━━━━━━\n\n- Do NOT guess or invent information.\n- Do NOT hide behind disclaimers.\n- Do NOT output JSON unless requested.\n- Avoid filler phrases (“many causes”, “see a doctor”) unless justified by reasoning.\n- If information is missing, state what is missing and why it matters.\n\n━━━━━━━━━━━━━━━━━━━━━━\nMANDATORY STRUCTURE\n━━━━━━━━━━━━━━━━━━━━━━\n\n1. Problem clarification (use only stated facts)\n2. Urgency assessment\n3. Differential diagnosis:\n   - Common\n   - Less common\n   - Rare but dangerous\n4. Medical reasoning\n5. Red-flag symptoms\n6. Safe next steps\n\nMissing any section = invalid response.\n\n━━━━━━━━━━━━━━━━━━━━━━\nCLINICAL REASONING\n━━━━━━━━━━━━━━━━━━━━━━\n\n- Localize symptoms anatomically.\n- Consider mechanical, inflammatory, infectious, neurological, vascular, and referred causes.\n- Account for age, sex, history, and medications when stated.\n- Consider rare conditions only when justified.\n━━━━━━━━━━━━━━━━━━━━━━\nSTYLE\n━━━━━━━━━━━━━━━━━━━━━━\n\n- Clear headings and bullet points\n- Minimal jargon (explain if used)\n- Calm, professional, precise\n_rise tone \nYour goal is to reduce harm, avoid misinformation, and guide safe medical decision-making.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "pSqdPt3p2Epoxode",
+          "name": "Google Gemini(PaLM) Api Monaimabdel119"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.answer }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        768,
+        0
+      ],
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "let parsed;\n\ntry {\n  parsed = JSON.parse($json.content.parts[0].text);\n} catch (e) {\n  return [\n    {\n      json: {\n        answer: \"Invalid JSON returned by model.\"\n      }\n    }\n  ];\n}\n\n// Handle error-only response\nif (parsed.error) {\n  return [\n    {\n      json: {\n        answer: `Error:\\n${parsed.error}`\n      }\n    }\n  ];\n}\n\n// Helper: format values (arrays, objects, strings)\nconst formatValue = (v) => {\n  if (Array.isArray(v)) return v.join(\"\\n- \");\n  if (typeof v === \"object\" && v !== null) return JSON.stringify(v, null, 2);\n  return v;\n};\n\n// Normalize keys: spaces → underscores, lowercase\nconst normalized = {};\nfor (const key in parsed) {\n  normalized[key.toLowerCase().replace(/\\s+/g, \"_\")] = parsed[key];\n}\n\n// Build answer string by appending everything\nlet answer = \"\";\nfor (const [key, value] of Object.entries(normalized)) {\n  answer += `${key.replace(/_/g, \" \").toUpperCase()}:\\n${formatValue(value)}\\n\\n`;\n}\n\n// Trim final output\nanswer = answer.trim();\n\nreturn [\n  {\n    json: {\n      answer\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        0
+      ],
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

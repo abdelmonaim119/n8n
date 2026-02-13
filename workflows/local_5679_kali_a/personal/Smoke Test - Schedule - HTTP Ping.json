@@ -68,13 +68,6 @@
   },
   "settings": {},
   "tags": [],
-  "active": true,
-  "projectId": "AbL0oEXcD3fRF7GZ",
-  "projectName": "Personal",
-  "homeProject": {
-    "id": "AbL0oEXcD3fRF7GZ",
-    "name": "Personal",
-    "type": "personal"
-  },
+  "active": false,
   "isArchived": false
 }

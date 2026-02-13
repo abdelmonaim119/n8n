@@ -1,0 +1,505 @@
+{
+  "id": "acTEybB2oCNccFQo",
+  "name": "Send - Gmail - First Outbound Message Sequence",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nSends first-touch outbound emails and updates follow-up tracking.\n\nTrigger:\nExecute Workflow Trigger from outbound orchestrator.\n\nProcess Summary:\n- Receive lead payload.\n- Build HTML message body.\n- Send Gmail message if criteria pass.\n- Update Google Tasks and Sheets tracking.\n\nOutput:\nInitial outbound message sent with tracking state updated.\n\nOwner:\nOutbound SDR Team",
+        "height": 380,
+        "width": 620,
+        "color": 7
+      },
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -428,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "html"
+            },
+            {
+              "name": "subject"
+            },
+            {
+              "name": "Email"
+            },
+            {
+              "name": "Company name"
+            }
+          ]
+        }
+      },
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        272,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "html": "{{ $json.html }}"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        496,
+        288
+      ],
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fc279c16-2846-4a36-a480-4dedc99b5340",
+              "name": "subject",
+              "value": "={{ $('When Executed by Another Workflow').item.json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "939b5ed5-e08f-4f8c-abb5-221b46d47703",
+              "name": "html",
+              "value": "={{ $('When Executed by Another Workflow').item.json.html }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        288
+      ],
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "473bc4fb-e091-488f-9f67-b0603972b291",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1616,
+        288
+      ],
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "task": "MTY3MTEzNTIzMjA4MzM5Nzg3ODQ6MDow",
+        "title": "=he answer: \n{{ $('When Executed by Another Workflow').item.json.Email }} ",
+        "additionalFields": {
+          "notes": "this persone answer to my outreach",
+          "status": "needsAction"
+        }
+      },
+      "type": "n8n-nodes-base.googleTasks",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        288
+      ],
+      "name": "Create a task",
+      "credentials": {
+        "googleTasksOAuth2Api": {
+          "id": "Srys84k33F2aY4Lv",
+          "name": "Google Tasks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o",
+          "mode": "list",
+          "cachedResultName": "ScrapingGoogleMap",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "US",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.row_number }}",
+            "first_outbound set at\n": "={{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "company name",
+              "displayName": "company name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Website",
+              "displayName": "Website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone numbre",
+              "displayName": "phone numbre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "services",
+              "displayName": "services",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company size ",
+              "displayName": "company size ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "linkedin",
+              "displayName": "linkedin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "year founded",
+              "displayName": "year founded",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Key Executives / Founders",
+              "displayName": "Key Executives / Founders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Social Media Profiles",
+              "displayName": "Social Media Profiles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Mission / Vision",
+              "displayName": "Mission / Vision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Awards / Certifications",
+              "displayName": "Awards / Certifications",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Taglines / Brand Messaging",
+              "displayName": "Taglines / Brand Messaging",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Projected Automation",
+              "displayName": "Projected Automation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "first_outbound set at\n",
+              "displayName": "first_outbound set at\n",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1392,
+        288
+      ],
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o",
+          "mode": "list",
+          "cachedResultName": "ScrapingGoogleMap",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "US",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "email",
+              "lookupValue": "={{ $('When Executed by Another Workflow').item.json.Email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1168,
+        288
+      ],
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('When Executed by Another Workflow').item.json.Email }}",
+        "subject": "={{ $('When Executed by Another Workflow').item.json.subject }}",
+        "message": "={{ $('When Executed by Another Workflow').item.json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        944,
+        288
+      ],
+      "name": "Send a message",
+      "webhookId": "2c077600-036f-4765-b788-7016944c59ff",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AUvfU2dkZPo9RTm6",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Create a task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a task": {
+      "main": [
+        []
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

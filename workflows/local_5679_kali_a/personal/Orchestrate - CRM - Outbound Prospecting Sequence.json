@@ -1,0 +1,1184 @@
+{
+  "id": "QghMD7MBqrGkZCrQ",
+  "name": "Orchestrate - CRM - Outbound Prospecting Sequence",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nRuns scheduled AI-assisted prospecting and writes outreach state back to CRM sheets.\n\nTrigger:\nSchedule Trigger (plus manual trigger for testing).\n\nProcess Summary:\n- Read candidate leads from sheet.\n- Generate research and messaging with agents/tools.\n- Invoke first outreach sub-workflow when criteria match.\n- Update status and metadata in CRM sheet.\n\nOutput:\nPrioritized outreach actions and updated CRM lead state.\n\nOwner:\nOutbound Operations",
+        "height": 380,
+        "width": 620,
+        "color": 7
+      },
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -572,
+        -560
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        800,
+        608
+      ],
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "33409b66-3fc4-4f09-a115-088eac9142d4",
+              "name": "Email",
+              "value": "={{ $json['identity-profiles'][0].identities[0].value }}",
+              "type": "string"
+            },
+            {
+              "id": "e1fd4b47-a8b0-4653-9187-468222d5eedf",
+              "name": "job_function",
+              "value": "={{ $json.properties.job_function.value }}",
+              "type": "string"
+            },
+            {
+              "id": "430e7689-a69d-4ee5-b984-df722833274b",
+              "name": "message",
+              "value": "={{ $json.properties.message.value }}",
+              "type": "string"
+            },
+            {
+              "id": "4bd1dee3-f292-4cf9-bd52-d9e731b5c2df",
+              "name": "persona",
+              "value": "={{ $json.properties.hs_persona.value }}",
+              "type": "string"
+            },
+            {
+              "id": "bbcd3362-5a93-4d6c-89c1-aa3d55a10317",
+              "name": "company_name",
+              "value": "={{ $json.properties.company.value }}",
+              "type": "string"
+            },
+            {
+              "id": "754d078c-e119-4a3b-ada1-530465fb60fb",
+              "name": "Industry",
+              "value": "={{ $json.properties.industry.value }}",
+              "type": "string"
+            },
+            {
+              "id": "0d0b12e6-905a-46ac-a6fb-f8833dc8096f",
+              "name": "City",
+              "value": "={{ $json.properties.city.value }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        352,
+        -160
+      ],
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.slice(2);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        -160
+      ],
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "model": "mistral-large-latest",
+        "options": {
+          "maxRetries": 2,
+          "safeMode": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        1904,
+        816
+      ],
+      "name": "Mistral Cloud Chat Model",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "ULrl5qHqTv9VVZF9",
+          "name": "Mistral Cloud monaimkali59"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [
+        2336,
+        816
+      ],
+      "name": "Auto-fixing Output Parser"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"html\": \"FULL_HTML_AND_FALLBACK_HERE\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2416,
+        1024
+      ],
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [
+        2624,
+        816
+      ],
+      "name": "Auto-fixing Output Parser1"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"subject\": \"\",\n\t\"EmailContent\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2704,
+        1024
+      ],
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# AI Agent Supervisor — Persona-Driven Outreach\n\nYou are AI Agent Supervisor.  \nExecute the workflow using persona-based automation intelligence.\n\n---\n\n## INPUT DATA\n\nCompany Name: {{ $('AI Agent').item.json.output['Company Name'] }}\nWebsite: {{ $('AI Agent').item.json.output.Website }}\nPhone: {{ $('AI Agent').item.json.output.Phone }}\nEmail: {{ $('AI Agent').item.json.output.Email }}\nServices: {{ $('AI Agent').item.json.output.Services }}\nCompany Size: {{ $('AI Agent').item.json.output['Company Size'] }}\nLinkedIn: {{ $('AI Agent').item.json.output.LinkedIn }}\nLocation: {{ $('AI Agent').item.json.output.Location }}\nYear Founded: {{ $('AI Agent').item.json.output['Year Founded'] }}\nSocial Media: {{ $('AI Agent').item.json.output['Social Media Profiles'] }}\nMission: {{ $('AI Agent').item.json.output['Mission / Vision'] }}\nAwards: {{ $('AI Agent').item.json.output['Awards / Certifications'] }}\nTagline: {{ $('AI Agent').item.json.output['Taglines / Brand Messaging'] }}\n\nPredicted Automation Needs:\n{{ Array.isArray($json.output['Predicted Automation Needs']) \n  ? $json.output['Predicted Automation Needs'].map(n => n.Service).join(', ') \n  : '' }}\n\n---\n\n## EXECUTION RULES\n\n1. If Email is invalid → return  \n   STATUS: SKIP_ITEM — INVALID_EMAIL\n\n2. If valid:\n   - Use Company Name\n   - Use Services to infer Industry\n   - Use Predicted Automation Needs to personalize offer\n\n3. Run workflow strictly:\n   Copywriter → HTML → n8n\n\nReturn only:\n- Final HTML  \nOR  \n- SKIP status\n",
+        "options": {
+          "systemMessage": "=# === SYSTEM MESSAGE — AI Agent Supervisor (Persona-Driven Automation Outreach) ===\n\n## ROLE\nWorkflow Orchestrator & Data Triage\n\n## GOAL\nAnalyze enriched company persona + automation prediction data and determine execution path for outbound automation outreach.\n\n---\n\n## TRIAGE LOGIC\n1. **Critical Check:**  \n   If the 'Email' field is empty, null, or invalid → stop immediately.  \n   OUTPUT: \"STATUS: SKIP_ITEM — INVALID_EMAIL\"\n\n2. **Data Enrichment:**  \n   If 'Company Name' is missing → set {{company}} = \"your team\"  \n   If 'Predicted Automation Needs' is empty → set {{needs}} = \"process automation\"\n\n3. **Tasking:**  \n   - Primary tool: **AI Agent Copywriter**  \n   - Provide the Copywriter with:\n     - Company Name\n     - Website\n     - Industry (derived from Services)\n     - Predicted Automation Needs\n     - Company Size\n     - Mission / Vision\n\n   - Secondary tool: **AI Agent Tool HTML**  \n   - Pass only the Copywriter’s EmailContent to it.\n\n---\n\n## CONSTRAINTS\n- Never output apologies.\n- Never guess or invent missing persona fields.\n- Missing fields must be replaced using Data Enrichment rules.\n- Final output must be ONLY the HTML returned by the HTML tool.\n\n---\n\n## SUPERVISOR SCOPE\nYou control validation, sequencing, and routing only.  \nYou do NOT write email copy or HTML.\n\n---\n\n## AVAILABLE TOOLS\n\n### 0. Think  \nPurpose: Validate readiness before each step  \nIf Think fails → halt immediately\n\n### 1. AI Agent Copywriter  \nInput: Persona + Automation Needs  \nOutput required:\n- subject\n- EmailContent  \nIf either missing → halt\n\n### 2. AI Agent Tool HTML  \nInput: EmailContent  \nOutput required:\n- html  \nIf missing → halt\n\n### 3. Call n8n Workflow Tool  \nInput:\n- subject\n- html  \nAction: Execute workflow\n\n---\n\n## STRICT SEQUENCE\nThink → Copywriter → Think → HTML → Think → n8n  \nNo skipping. No retries. No mutation.\n\nExecution ends after workflow call.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2736,
+        384
+      ],
+      "name": "AI Agent supervasor"
+    },
+    {
+      "parameters": {
+        "toolDescription": "called after Copywriter outputs EmailContent.",
+        "text": "=COPYWRITER CONTENT:\n{{ $fromAI('pleaceholder') }}\n\n---\n\nTASK\n\n1. Take the Copywriter content above.\n2. Split it into paragraphs.\n3. Wrap each paragraph in:\n<p style=\"margin-bottom:15px;\"></p>\n4. Insert it into the section marked:\n[INJECT CONTENT HERE]\ninside the HTML template below.\n5. Output ONLY the final HTML.\n\n---\n\nHTML TEMPLATE\n\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n</head>\n\n<body style=\"margin:0; padding:0; background-color:#f5f5f5; font-family: Arial, sans-serif; font-size:14px; color:#333333; line-height:1.6;\">\n\n<table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\">\n    <tr>\n        <td align=\"center\" style=\"padding: 30px 10px;\">\n\n            <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"600\"\n                   style=\"background-color:#ffffff; border-radius:10px; overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,0.05);\">\n\n                <!-- Header -->\n                <tr>\n                    <td style=\"background-color:#007BFF; padding:30px; text-align:center; color:#ffffff;\">\n                        <h1 style=\"margin:0; font-size:24px;\">Your Automation Partner</h1>\n                    </td>\n                </tr>\n\n                <!-- Greeting -->\n                <tr>\n                    <td style=\"padding:30px;\">\n                        <h2 style=\"margin:0; font-size:18px; color:#222222;\">\n                            Hello {{ $json.company_name }} Team,\n                        </h2>\n                    </td>\n                </tr>\n\n                <!-- Body -->\n                <tr>\n                    <td style=\"padding:30px;\">\n                        [INJECT CONTENT HERE]\n                    </td>\n                </tr>\n\n                <!-- CTA Buttons -->\n                <tr>\n                    <td align=\"center\" style=\"padding: 0 30px 30px 30px;\">\n                        <a href=\"https://calendar.app.google/Rq6r6sRWQd7ueh7p6\"\n                           style=\"background-color:#28A745; color:#ffffff; text-decoration:none;\n                                  padding:14px 28px; border-radius:6px; font-weight:bold;\n                                  display:inline-block; margin:5px 0;\">\n                            Book Appointment\n                        </a>\n\n                        <a href=\"https://arcane-automation-lab.lovable.app\"\n                           style=\"background-color:#007BFF; color:#ffffff; text-decoration:none;\n                                  padding:14px 28px; border-radius:6px; font-weight:bold;\n                                  display:inline-block; margin:5px 0;\">\n                            My Page\n                        </a>\n                    </td>\n                </tr>\n\n                <!-- Footer -->\n                <tr>\n                    <td style=\"background-color:#f0f0f0; padding:20px; font-size:12px; color:#666666; text-align:center;\">\n                        <p>\n                            <a href=\"#\" style=\"color:#007BFF; text-decoration:underline;\">Unsubscribe</a> |\n                            <a href=\"https://www.upwork.com/freelancers/~0127eaabb7fe52aa77\"\n                               style=\"color:#007BFF; text-decoration:underline;\">Upwork Profile</a> |\n                            <a href=\"https://arcane-automation-lab.lovable.app\"\n                               style=\"color:#007BFF; text-decoration:underline;\">Portfolio</a>\n                        </p>\n                        <p style=\"margin-top:10px;\">© 2025 Arcane Automation Lab. All rights reserved.</p>\n                    </td>\n                </tr>\n\n            </table>\n\n        </td>\n    </tr>\n</table>\n\n</body>\n</html>\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# SYSTEM MESSAGE — Persona-Aware HTML Template Injector\n\nROLE: HTML Template Injector  \nOBJECTIVE: Insert persona-targeted email copy into the Arcane Automation HTML email shell.\n\n---\n\nINPUT\nYou receive raw email copy written by the Copywriter.\nThis copy is already optimized for company fit and automation relevance.\n\n---\n\nYOUR TASK\nInject the Copywriter’s content into the template’s content area without changing anything else.\n\n---\n\nSTRICT RULES\n\n1. TEMPLATE INTEGRITY  \nYou may NOT change:\n- Colors\n- Fonts\n- Spacing\n- Links\n- Button text\n- Layout\n- Headers\n- Footer\n\n2. CONTENT HANDLING  \n- Split the Copywriter’s content into logical paragraphs.\n- Wrap each paragraph in:\n  <p style=\"margin-bottom:15px;\"></p>\n\n3. INSERTION  \nPlace the formatted paragraphs exactly where the template specifies:\n[INJECT CONTENT HERE]\n\n4. OUTPUT  \nReturn only the final HTML.\nNo markdown.\nNo comments.\nNo explanations.\nNo extra whitespace before or after.\n\n---\n\nFAILURE CONDITIONS\n\n- If Copywriter content is empty → halt\n- If template structure is modified → halt\n- If HTML is incomplete → halt\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        2336,
+        608
+      ],
+      "name": "AI Agent Tool html"
+    },
+    {
+      "parameters": {
+        "toolDescription": "called to generate email content here is AI Agent Copywriter",
+        "text": "=# CONTEXT FROM SUPERVISOR\n\nCompany Name: {{ $('AI Agent').item.json.output['Company Name'] }}\nWebsite: {{ $('AI Agent').item.json.output.Website }}\nServices: {{ $('AI Agent').item.json.output.Services }}\nCompany Size: {{ $('AI Agent').item.json.output['Company Size'] }}\nLocation: {{ $('AI Agent').item.json.output.Location }}\nMission: {{ $('AI Agent').item.json.output['Mission / Vision'] }}\n\nPredicted Automation Needs:\n{{ Array.isArray($json.output['Predicted Automation Needs']) \n  ? $json.output['Predicted Automation Needs'].map(n => n.Service).join(', ') \n  : '' }}\n\n---\n\n# TASK\n\nWrite a 3-paragraph email.\n\n1. **The Hook**  \nMake a grounded observation about how companies offering  \n{{ $('AI Agent').item.json.output.Services }}  \nat a size of  \n{{ $('AI Agent').item.json.output['Company Size'] }}  \ntypically struggle with one of the following:\n{{ Array.isArray($json.output['Predicted Automation Needs']) \n  ? $json.output['Predicted Automation Needs'][0].Service \n  : '' }}\n\n2. **The Story**  \nDescribe a short before-and-after transformation from a similar company that implemented that automation. Include one measurable change.\n\n3. **The Close**  \nAsk for interest or permission to share details. Do not ask for a meeting.\n\n---\n\n# REQUIRED LINKS (use only if relevant)\n\nBooking:\nhttps://calendar.app.google/xsofwVVM9VVTc2xL8?utm_source={{utm_source}}&utm_medium={{utm_medium}}&utm_campaign={{utm_campaign}}\n\nLanding Page:\nhttps://arcane-automation-lab.lovable.app\n\nUpwork:\nhttps://www.upwork.com/freelancers/~0127eaabb7fe52aa77?mp_source=share\n\n---\n\nOUTPUT:\nReturn ONLY the email text.\nNo subject.\nNo labels.\nNo commentary.\n≤100 words.\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# SYSTEM MESSAGE — Persona-Driven Outreach Writer\n\nROLE: B2B Automation Targeting Copywriter  \nOBJECTIVE: Write short first-contact emails that demonstrate strong fit using the company’s real automation gaps.\n\n---\n\nPERSUASION MODEL\n\n1. Observation  \nReference a concrete operational pattern in companies like theirs, based on:\n- Their services\n- Their size\n- Their predicted automation needs\n\n2. Micro-Story  \nDescribe a short before-and-after transformation in a similar company that adopted automation.\n\n3. Fit Bridge  \nTie that outcome directly to their current situation.\n\n4. Soft CTA  \nAsk for interest or permission to share details. Never ask for a meeting.\n\n---\n\nSTYLE RULES\n\n- Write as an equal.\n- No sales tone.\n- No fluff.\n- No hype.\n- No emotional language.\n- Short sentences.\n- One idea per paragraph.\n\n---\n\nFORBIDDEN\n\n- “Hope you’re well”\n- “Excited”\n- “Revolutionary”\n- “Game-changing”\n- Meetings, demos, or sales calls\n\n---\n\nHARD LIMITS\n\n- Max 100 words  \n- First contact only  \n- One operational problem  \n- One measurable transformation  \n- Must use company-specific data  \n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        2624,
+        608
+      ],
+      "name": "AI Agent copywriter"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        2912,
+        608
+      ],
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "description": "called after HTML outputs html and Copywriter outputs subject.",
+        "workflowId": {
+          "__rl": true,
+          "value": "1StOLAPrVjGIUVHW",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/1StOLAPrVjGIUVHW",
+          "cachedResultName": "FirstOutbound"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "html": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('html', ``, 'string') }}",
+            "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('subject', ``, 'string') }}",
+            "Email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Email', ``, 'string') }}",
+            "Company name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Company_name', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "html",
+              "displayName": "html",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Company name",
+              "displayName": "Company name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        3040,
+        608
+      ],
+      "name": "Call 'FirstOutbound'"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0a8ec304-2cbd-4c9a-9955-e6f0ab0a7a5f",
+              "leftValue": "={{ $json.Email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "4c1ffe8f-6a39-4c4e-a963-7c1c293c4c30",
+              "leftValue": "={{ $json.company_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        576,
+        -160
+      ],
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.slice(26);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        608
+      ],
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        128,
+        704
+      ],
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o",
+          "mode": "list",
+          "cachedResultName": "ScrapingGoogleMap",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "US",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        352,
+        608
+      ],
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Your input fields may be unstructured, messy, or incorrect. Normalize them carefully.\n\nRaw Inputs:\n{{ $json.output['Company Name'] }}\n{{ $json.output.Website }} \n{{ $json.output.Linkedin }}\n{{ $json.output.Email }}\nNormalization rules:\n- Detect company name from text that is not a URL, email, or phone number.\n- Detect website from any valid URL or domain.\n- Detect email from any valid email pattern.\n- Detect phone from any phone pattern.\n- Detect LinkedIn from any linkedin.com URL.\n- Remove duplicates.\n\nCheck if the normalized data is sufficient for outbound purposes:\n- Company Name present\n- Website OR LinkedIn present\n- At least one contact method (email or phone)\n\nIF sufficient, **do not perform any SerpAPI queries**.\nIF insufficient, perform SerpAPI queries in this order (max 5):\n1. site:{{ $json.output.Website }} \n2. \"{{ $json.output['Company Name'] }}\n\" official website\n3. \"{{ $json.output['Company Name'] }}\n\" contact\n4. \"{{ $json.output['Company Name'] }}\n\" about\n5. \"{{ $json.output.Linkedin }}\" LinkedIn\n\nAfter normalization and/or searches, return strictly this JSON:\n\n{\n  \"Company Name\": \"\",\n  \"Website\": \"\",\n  \"Phone\": \"\",\n  \"Email\": \"\",\n  \"Services\": \"\",\n  \"Company Size\": \"\",\n  \"LinkedIn\": \"\",\n  \"Location\": \"\",\n  \"Year Founded\": \"\",\n  \"Key Executives / Founders\": \"\",\n  \"Social Media Profiles\": \"\",\n  \"Mission / Vision\": \"\",\n  \"Awards / Certifications\": \"\",\n  \"Taglines / Brand Messaging\": \"\"\n}\n\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a company data extraction and normalization agent.\n\nYour task is to:\n1. Carefully read all provided input fields, even if they are messy or unstructured.\n2. Normalize the data: detect company name, website, email, phone, LinkedIn, etc. from any text.\n3. Remove duplicates and clean invalid values.\n4. Check if the normalized data is **enough for outbound purposes**. For outbound, the minimal required fields are:\n   - Company Name\n   - Website OR LinkedIn\n   - At least one contact method (email or phone)\n5. Only if the data is insufficient for outbound, you may use **up to 5 SerpAPI searches** in this exact order:\n   1. site:companydomain.com\n   2. \"Company Name\" official website\n   3. \"Company Name\" contact\n   4. \"Company Name\" about\n   5. \"Company Name\" LinkedIn\n6. Never repeat a search, never retry failed queries, never loop, never replan.\n7. After normalization and/or searches, fill all JSON fields. If information cannot be confirmed, return `\"Not available\"`.\n8. Return strictly valid JSON only. No commentary.\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1424,
+        384
+      ],
+      "name": "AI Agent",
+      "alwaysOutputData": false,
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"Company Name\": \"\",\n  \"Website\": \"\",\n  \"Phone\": \"\",\n  \"Email\": \"\",\n  \"Services\": \"\",\n  \"Company Size\": \"\",\n  \"LinkedIn\": \"\",\n  \"Location\": \"\",\n  \"Year Founded\": \"\",\n  \"Key Executives / Founders\": \"\",\n  \"Social Media Profiles\": \"\",\n  \"Mission / Vision\": \"\",\n  \"Awards / Certifications\": \"\",\n  \"Taglines / Brand Messaging\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1600,
+        816
+      ],
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        608
+      ],
+      "name": "Auto-fixing Output Parser2"
+    },
+    {
+      "parameters": {
+        "options": {
+          "gl": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Country', ``, 'string') }}",
+          "no_cache": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Explicit_Array', ``, 'boolean') }}",
+          "google_domain": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Google_Domain', ``, 'string') }}",
+          "hl": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Language', ``, 'string') }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        1392,
+        608
+      ],
+      "name": "SerpAPI",
+      "credentials": {
+        "serpApi": {
+          "id": "mhqCWXuXcaB7w5BG",
+          "name": "SerpAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following company persona and predict automation or technology services they might need:\n\n{\n  \"Company Name\": \"{{ $json.output.Website }}\",\n  \"Website\": \"{{ $json.output.Website }}\",\n  \"Phone\": \"{{ $json.output.Phone }}\",\n  \"Email\": \"{{ $json.output.Email }}\"\",\n  \"Services\": \"{{ $json.output.Services }}\",\n  \"Company Size\": \"{{ $json.output['Company Size'] }}\"\n\"Linkedin\": \"{{ $json.output.LinkedIn }}\",\n  \"Location\": \"{{ $json.output.Location }}\",\n  \"Year Founded\": \"{{ $json.output['Year Founded'] }}\",\n  \"Key Executives / Founders\": \"{{ $json.output['Key Executives / Founders'] }}\",\n  \"Social Media Profiles\": \"{{ $json.output['Social Media Profiles'] }}\",\n  \"Mission / Vision\": \"{{ $json.output['Mission / Vision'] }}\",\n  \"Awards / Certifications\": \"{{ $json.output['Awards / Certifications'] }}\",\n  \"Taglines / Brand Messaging\": \"{{ $json.output['Taglines / Brand Messaging'] }}\"\n}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a business intelligence assistant. Your task is to analyze a company persona and predict potential automation or technology services that the company might need.  \n\nUse the company’s details (services, size, industry, LinkedIn, location, mission) to infer logical automation opportunities, including but not limited to:\n\n- Marketing automation\n- HR and recruitment automation\n- Sales and CRM automation\n- Workflow / process optimization\n- Analytics and reporting automation\n- Customer support automation\n\nRules:\n1. Base your predictions only on the data provided; do not make assumptions beyond logical business context.\n2. Output your results in structured JSON with these fields:\n\n{\n  \"Company Name\": \"\",\n  \"Predicted Automation Needs\": [],\n  \"Rationale\": \"\"\n}\n\n- \"Predicted Automation Needs\" should be a list of 3-10 automation solutions/services likely relevant to the company.  \n- \"Rationale\" should briefly explain why each service was suggested (1-2 sentences per service).  \n- Do not include marketing messages or speculative contact info.  \n- Be concise, factual, and actionable.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1888,
+        384
+      ],
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [
+        1968,
+        608
+      ],
+      "name": "Auto-fixing Output Parser3"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"Company Name\": \"Discovered MENA\",\n  \"Predicted Automation Needs\": []\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2080,
+        816
+      ],
+      "name": "Structured Output Parser3"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o",
+          "mode": "list",
+          "cachedResultName": "ScrapingGoogleMap",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "US",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h6d7ogr5LWev6W3PNjEigDJ0FeDbdaEIbhh4qhOWh4o/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $node[\"Loop Over Items\"].json[\"row_number\"]}}",
+            "company name": "={{ $('AI Agent').item.json.output['Company Name'] }}",
+            "Website": "={{ $('AI Agent').item.json.output.Website }}",
+            "phone numbre": "={{ \n  $('AI Agent').item.json.output.Phone \n    ? String($('AI Agent').item.json.output.Phone).replace(/^\\+/, '') \n    : '' \n}}",
+            "email": "={{ $('AI Agent').item.json.output.Email }}",
+            "services": "={{ $('AI Agent').item.json.output.Services }}",
+            "company size ": "={{ $('AI Agent').item.json.output['Company Size'] }}",
+            "linkedin": "={{ $('AI Agent').item.json.output.LinkedIn }}",
+            "location": "={{ $('AI Agent').item.json.output.Location }}",
+            "year founded": "={{ $('AI Agent').item.json.output['Year Founded'] }}",
+            "Key Executives / Founders": "={{ $('AI Agent').item.json.output['Key Executives / Founders'] }}",
+            "Social Media Profiles": "={{ $('AI Agent').item.json.output['Social Media Profiles'] }}",
+            "Mission / Vision": "={{ $('AI Agent').item.json.output['Mission / Vision'] }}",
+            "Awards / Certifications": "={{ $('AI Agent').item.json.output['Awards / Certifications'] }}",
+            "Taglines / Brand Messaging": "={{ $('AI Agent').item.json.output['Taglines / Brand Messaging'] }}",
+            "Projected Automation": "={{ \n  Array.isArray($('AI Agent1').item.json.output['Predicted Automation Needs']) \n    ? $('AI Agent1').item.json.output['Predicted Automation Needs'].join(', ') \n    : String($('AI Agent1').item.json.output['Predicted Automation Needs'] || '') \n}}\n"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "company name",
+              "displayName": "company name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Website",
+              "displayName": "Website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone numbre",
+              "displayName": "phone numbre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "services",
+              "displayName": "services",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company size ",
+              "displayName": "company size ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "linkedin",
+              "displayName": "linkedin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "year founded",
+              "displayName": "year founded",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Key Executives / Founders",
+              "displayName": "Key Executives / Founders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Social Media Profiles",
+              "displayName": "Social Media Profiles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Mission / Vision",
+              "displayName": "Mission / Vision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Awards / Certifications",
+              "displayName": "Awards / Certifications",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Taglines / Brand Messaging",
+              "displayName": "Taglines / Brand Messaging",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Projected Automation",
+              "displayName": "Projected Automation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3248,
+        608
+      ],
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        128,
+        512
+      ],
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\n\nYour input fields may be unstructured, mixed, or incorrect.\nYou must carefully read and normalize them before extracting company data.\n\nRaw Inputs:\n{{ $json['company name'] }}\n{{ $json.Website }} {{ $json.email }}\n{{ $json['company size '] }} {{ $json.linkedin }}\n{{ $json.linkedin }}\n{{ $json.location }}\n{{ $json['company name'] }}\n{{ $json.Website }}{{ $json.email }}\n{{ $json['company size '] }}{{ $json.linkedin }}\n{{ $json.linkedin }}\n{{ $json.location }}\nNormalize as follows:\n- Detect company name from text that is not a URL, not an email, and not a phone number.\n- Detect website from any valid domain or URL.\n- Detect email from any valid email pattern.\n- Detect phone from any phone pattern.\n- Detect LinkedIn from any linkedin.com URL.\n- Remove duplicates.\n\nIf after normalization any critical data is missing (Company Name or Website), you may use up to 5 SerpAPI searches following the fixed order.\n\nReturn strictly this JSON structure:\n\n{\n  \"Company Name\": \"\",\n  \"Website\": \"\",\n  \"Phone\": \"\",\n  \"Email\": \"\",\n  \"Services\": \"\",\n  \"Company Size\": \"\",\n  \"LinkedIn\": \"\",\n  \"Location\": \"\",\n  \"Year Founded\": \"\",\n  \"Key Executives / Founders\": \"\",\n  \"Social Media Profiles\": \"\",\n  \"Mission / Vision\": \"\",\n  \"Awards / Certifications\": \"\",\n  \"Taglines / Brand Messaging\": \"\"\n}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a data normalization and company intelligence extraction agent.\n\nYour task is to:\n1. Carefully read all provided input fields even if they are messy, mixed, or incorrectly structured.\n2. Detect and reassign values to the correct fields (company name, website, email, phone, LinkedIn, etc.).\n3. Clean and normalize the data (remove duplicates, invalid values, formatting noise).\n4. Use SerpAPI only if important information is missing or unclear.\n5. You may use at most FIVE (5) SerpAPI searches.\n6. Execute searches only in this order:\n   1. site:companydomain.com\n   2. \"Company Name\" official website\n   3. \"Company Name\" contact\n   4. \"Company Name\" about\n   5. \"Company Name\" LinkedIn\n7. Never repeat a query.\n8. Never retry a failed query.\n9. Never loop or replan.\n10. After five searches or when data is complete, stop and return output.\n11. Never guess.\n12. If data cannot be confirmed, return \"Not available\".\n\nYou must return strictly valid JSON with the defined schema and no additional text.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1040,
+        384
+      ],
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        608
+      ],
+      "name": "Auto-fixing Output Parser4"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"Company Name\": \"\",\n  \"Website\": \"\",\n  \"Linkedin\": \"\",\n  \"Email\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1168,
+        816
+      ],
+      "name": "Structured Output Parser4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        816
+      ],
+      "name": "Mistral Cloud Chat Model1",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "ULrl5qHqTv9VVZF9",
+          "name": "Mistral Cloud monaimkali59"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent supervasor",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent Tool html",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Auto-fixing Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent copywriter",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Auto-fixing Output Parser2",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Auto-fixing Output Parser3",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent Tool html",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent copywriter",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent supervasor": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Tool html": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent supervasor",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent copywriter": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent supervasor",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent supervasor",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'FirstOutbound'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent supervasor",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser2",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent supervasor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser3",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser4": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser4": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser4",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Auto-fixing Output Parser4",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}
