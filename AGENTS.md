@@ -15,7 +15,7 @@ Before generating or editing ANY workflow JSON in this repo:
 If preflight fails, STOP and request the missing inputs. Do not generate workflows.
 
 ### 🌍 Context
-- **n8n Version**: 2.7.4
+- **n8n Version**: 2.4.6
 - **Source of Truth**: `@n8n-as-code/skills` tools (Deep Search + Technical Schemas)
 
 ---
