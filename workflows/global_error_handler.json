@@ -1,0 +1,96 @@
+{
+  "name": "Handle - n8n - Workflow Errors (Notify)",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Global Error Handler\n\n**Purpose:** Centralize workflow error notifications.\n\n**Trigger:** Error Trigger (runs when a linked workflow fails).\n\n**Output:** Slack notification (configure Slack credentials + channel env var).\n\n**Owner:** (set in n8n)\n",
+        "height": 260,
+        "width": 520,
+        "color": 2
+      },
+      "id": "4f6d6a4e-e22a-47a8-8a28-fb0f6b281e01",
+      "name": "00 - Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        40,
+        40
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "c01c2eb9-ef65-4f8b-86c0-fb6bd9d1cc7a",
+      "name": "01 - Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        420,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const e = $json;\n\n// The Error Trigger payload shape can vary by n8n version/config.\n// We format defensively and include what we can.\nconst workflowName = e?.workflow?.name || e?.workflowName || 'unknown';\nconst workflowId = e?.workflow?.id || e?.workflowId || '';\nconst executionId = e?.execution?.id || e?.executionId || '';\nconst errorMessage = e?.error?.message || e?.message || JSON.stringify(e?.error || e);\n\nreturn [{\n  json: {\n    text: [\n      '*n8n workflow failed*',\n      `Workflow: ${workflowName}${workflowId ? ` (id: ${workflowId})` : ''}`,\n      executionId ? `Execution: ${executionId}` : null,\n      `Error: ${errorMessage}`,\n    ].filter(Boolean).join('\\n')\n  }\n}];\n"
+      },
+      "id": "c6d2f2d0-503d-4e04-92f7-4b79b5b16d16",
+      "name": "02 - Format Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "post",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $env.SLACK_ADMIN_CHANNEL_ID || $env.SLACK_APPROVAL_CHANNEL_ID || '' }}"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {}
+      },
+      "id": "b7b8c197-7e8b-41ee-b8f0-90b94f2e5f62",
+      "name": "03 - Slack Notify Error",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        900,
+        260
+      ]
+    }
+  ],
+  "connections": {
+    "01 - Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "02 - Format Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 - Format Message": {
+      "main": [
+        [
+          {
+            "node": "03 - Slack Notify Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
+
