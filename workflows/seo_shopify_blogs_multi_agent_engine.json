@@ -1,0 +1,1261 @@
+{
+  "name": "Generate - SEO - Shopify Blog Article (Agents + HITL)",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## SEO Content Engine (Multi-Agent)\n\n**Purpose:** Generate an SEO-optimized Shopify blog article from a single topic, with research + vector memory + human approval.\n\n**Trigger:** n8n Chat Trigger (topic provided via chat).\n\n**Process Summary:**\n1. Orchestrator produces a keyword cluster + SERP plan\n2. SERP search + Researcher selects best sources\n3. Loop scrape sources and store in Supabase Vector Store\n4. SEO Strategist builds brief, Writer drafts, Fact-Checker verifies\n5. Human approval (Slack) before publication\n\n**Output:** Published Shopify Blog Article + SEO metafields\n\n**Owner:** (set in n8n)\n",
+        "height": 360,
+        "width": 560,
+        "color": 4
+      },
+      "id": "3603d1e9-fb98-4908-a2e5-2349e27c59b4",
+      "name": "00 - Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        40,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## [RESEARCH]\n- Keyword intelligence\n- SERP analysis\n- Source scraping + vector memory\n",
+        "height": 140,
+        "width": 340,
+        "color": 3
+      },
+      "id": "b6cf55bf-1d26-4e3a-94a5-9326a31a2f2c",
+      "name": "Stage - RESEARCH",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        40,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## [ANALYSIS]\n- SEO brief + outline\n- Internal linking + SERP intent mapping\n",
+        "height": 140,
+        "width": 340,
+        "color": 6
+      },
+      "id": "9af0db0f-5c3e-4b2f-b08c-4b35f4dd75b1",
+      "name": "Stage - ANALYSIS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        40,
+        740
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## [CREATION]\n- Draft HTML article\n- Fact-check + citations\n",
+        "height": 140,
+        "width": 340,
+        "color": 5
+      },
+      "id": "8f9c0441-85c4-45c3-b6d4-9fe5c31c8ec7",
+      "name": "Stage - CREATION",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        40,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## [DISTRIBUTION]\n- Human approval gate\n- Shopify publication + SEO metafields\n",
+        "height": 140,
+        "width": 340,
+        "color": 7
+      },
+      "id": "fb5c9c4b-e67a-474a-becb-05f3f55a1c8b",
+      "name": "Stage - DISTRIBUTION",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        40,
+        1340
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "b035acd1-4fa3-4650-bde0-dd1379b54ce7",
+      "name": "01 - Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        460,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "97ac4d11-b6bf-4ad4-bb9b-4d7a77f7b4f9",
+              "name": "topic",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "1aab17df-3b6a-4d5b-b2da-8c18b19a4f4c",
+              "name": "language",
+              "value": "={{ $env.CONTENT_LANGUAGE || 'fr' }}",
+              "type": "string"
+            },
+            {
+              "id": "4c7f3b30-8b14-47c7-9db1-0c6c64f8cf40",
+              "name": "country",
+              "value": "={{ $env.SERP_COUNTRY || 'FR' }}",
+              "type": "string"
+            },
+            {
+              "id": "af65f429-6af8-4f8f-bdcb-8c3b6e771b2d",
+              "name": "serpLocation",
+              "value": "={{ $env.SERP_LOCATION || 'France' }}",
+              "type": "string"
+            },
+            {
+              "id": "c0337c8f-5fd9-48c4-bb36-6d1f9a5bb8a5",
+              "name": "maxSources",
+              "value": "={{ Number($env.SEO_MAX_SOURCES || 6) }}",
+              "type": "number"
+            },
+            {
+              "id": "testmode-key-seo",
+              "name": "testMode",
+              "value": "={{ $env.TEST_MODE === 'true' || $env.TEST_MODE === true }}",
+              "type": "boolean"
+            },
+            {
+              "id": "idempotent-key-seo",
+              "name": "idempotentKey",
+              "value": "={{ ($json.topic || 'article').replace(/[^a-z0-9]/gi, '-').toLowerCase() + '_' + $now.toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "56719286-4ca3-4d01-ba88-d4ca102a4803",
+      "name": "02 - Normalize Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        700,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"primaryKeyword\": \"\",\n  \"searchIntent\": \"\",\n  \"longTailKeywords\": [\"\"],\n  \"lsiKeywords\": [\"\"],\n  \"serpQuery\": \"\",\n  \"requiredSections\": {\n    \"h2Count\": 6,\n    \"h3PerH2\": 2,\n    \"includeTable\": true,\n    \"includeFaq\": true\n  },\n  \"audience\": \"\",\n  \"tone\": \"\",\n  \"constraints\": {\n    \"noHallucinations\": true,\n    \"mustCiteSources\": true\n  }\n}\n",
+        "autoFix": true,
+        "options": {}
+      },
+      "id": "17920aba-c2cd-411c-abe7-f64d2fc19546",
+      "name": "03a - Orchestrator Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        960,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=TASK:\nYou are the Orchestrator Agent (Manager). Build an enterprise-ready SEO content plan for the topic.\n\nINPUT:\nTopic: {{ $json.topic }}\nLanguage: {{ $json.language }}\nCountry: {{ $json.country }}\n\nREQUIREMENTS:\n- Expand the topic into a semantic keyword cluster: primary keyword, search intent, long-tail keywords, LSI terms.\n- Generate ONE best SERP query for competitor research.\n- Output must be valid JSON matching the output schema.\n\nReturn ONLY JSON.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an SEO Orchestrator Agent.\n\nRules:\n- Do not invent facts.\n- Keep outputs concise and directly actionable.\n- Use the language requested.\n- JSON only.\n"
+        }
+      },
+      "id": "c30193e8-1247-4a90-9293-5202f7c67ee9",
+      "name": "03 - Orchestrator Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        960,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://serpapi.com/search.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "engine",
+              "value": "google"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.output.serpQuery }}"
+            },
+            {
+              "name": "location",
+              "value": "={{ $json.serpLocation }}"
+            },
+            {
+              "name": "hl",
+              "value": "={{ $json.language }}"
+            },
+            {
+              "name": "gl",
+              "value": "={{ $json.country }}"
+            },
+            {
+              "name": "num",
+              "value": "={{ $json.maxSources * 2 }}"
+            },
+            {
+              "name": "api_key",
+              "value": "={{ $env.SERPAPI_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        },
+        "continueOnFail": true
+      },
+      "id": "23274446-28b6-4cf6-b74d-ab715491b579",
+      "name": "04 - SERPAPI Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1220,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\\n  const serp = $json || {};\\n  if (serp.error) throw new Error('SERP API error: ' + (serp.error.message || JSON.stringify(serp.error)));\\n  const organic = Array.isArray(serp.organic_results) ? serp.organic_results : [];\\n  if (organic.length === 0) throw new Error('No SERP results found.');\\n\\n  // Reduce payload passed into the Researcher agent.\\n  const results = organic.slice(0, 20).map(r => ({\\n    position: r.position,\\n    title: r.title || 'Untitled',\\n    link: r.link || '',\\n    snippet: r.snippet || '',\\n    displayed_link: r.displayed_link || '',\\n  })).filter(r => r.link && r.link.length > 0);\\n\\n  if (results.length === 0) throw new Error('All SERP results were invalid.');\\n\\n  return [{\\n    json: {\\n      ...$json,\\n      serpResults: results,\\n      __serp_ok: true,\\n    }\\n  }];\\n} catch (e) {\\n  return [{\\n    json: {\\n      ...$json,\\n      __error: e.message,\\n      __serp_ok: false,\\n    }\\n  }];\\n}"
+      },
+      "id": "239e626a-4709-407b-a0b9-73640decac84",
+      "name": "05 - Prepare SERP Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1480,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"selectedSources\": [\n    {\n      \"url\": \"\",\n      \"title\": \"\",\n      \"reason\": \"\"\n    }\n  ]\n}\n",
+        "autoFix": true,
+        "options": {}
+      },
+      "id": "a9e4a7be-7d1d-4b38-94b7-3180a7f679f1",
+      "name": "06a - Researcher Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1740,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=TASK:\nYou are the Researcher Agent (Worker).\n\nINPUT:\nTopic: {{ $json.topic }}\nPrimary keyword: {{ $json.output.primaryKeyword }}\nSERP results (JSON):\n{{ JSON.stringify($json.serpResults) }}\n\nGOAL:\n- Select the BEST {{ $json.maxSources }} sources for factual grounding and competitor analysis.\n- Prefer authoritative sources and high relevance.\n- Output JSON with selectedSources (url, title, reason).\n\nReturn ONLY JSON.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a strict web Researcher.\n\nRules:\n- Select sources that will support accurate facts.\n- Avoid low-quality / spam sources.\n- JSON only.\n"
+        }
+      },
+      "id": "9fbd2af7-7c64-46ba-a17d-4ccf8326a4c1",
+      "name": "06 - Researcher Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1740,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const selected = ($json.output?.selectedSources ?? []).filter(s => s?.url);\nconst maxSources = Number($json.maxSources || 6);\n\nconst items = selected.slice(0, maxSources).map(s => ({\n  json: {\n    // Carry context forward into the loop.\n    topic: $json.topic,\n    language: $json.language,\n    country: $json.country,\n    orchestrator: $json.output,\n\n    sourceUrl: s.url,\n    sourceTitle: s.title || '',\n    sourceReason: s.reason || '',\n  }\n}));\n\nreturn items.length ? items : [{ json: { ...$json, sourceUrl: null, error: 'No sources selected' } }];\n"
+      },
+      "id": "e4c2e65c-437e-4b0c-9f4f-1323b22a3b0f",
+      "name": "07 - Build Source Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "854dfdbd-c4d1-4df7-8e2a-872b69798bc1",
+      "name": "08 - Loop Sources",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2260,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "6b1ef4b4-5c16-4939-8d5d-3519c0f915ee",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              },
+              "leftValue": "={{ $env.FIRECRAWL_API_KEY || '' }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5f6fad84-2010-4a98-979c-f449be9152e0",
+      "name": "09 - Use Firecrawl?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2520,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.FIRECRAWL_SCRAPE_URL || 'https://api.firecrawl.dev/v2/scrape' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.FIRECRAWL_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"{{ $json.sourceUrl }}\",\n  \"formats\": [\"markdown\"],\n  \"onlyMainContent\": true\n}",
+        "options": {
+          "timeout": 45000
+        }
+      },
+      "id": "a839c6d9-7336-41f4-8e3a-2cc96f45bbc8",
+      "name": "10 - Firecrawl Scrape",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2780,
+        160
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.sourceUrl }}",
+        "options": {
+          "timeout": 45000,
+          "followRedirect": true
+        }
+      },
+      "id": "d542179b-708d-4f6a-a3f7-7c3b885f3d2a",
+      "name": "11 - Direct Fetch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2780,
+        360
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\\n  const sourceUrl = $json.sourceUrl || '';\\n  const sourceTitle = $json.sourceTitle || '';\\n\\n  if (!sourceUrl) throw new Error('Missing sourceUrl.');\\n\\n  let text = '';\\n\\n  // Firecrawl response commonly includes markdown in `data.markdown` or `markdown`.\\n  // Direct fetch returns HTML in `body` / raw.\\n  if ($json.data?.markdown) text = $json.data.markdown;\\n  else if ($json.markdown) text = $json.markdown;\\n  else if (typeof $json.body === 'string') text = $json.body;\\n  else if (typeof $json === 'string') text = $json;\\n\\n  text = String(text || '')\\n    .replace(/<script[\\\\s\\\\S]*?<\\\\/script>/gi, ' ')\\n    .replace(/<style[\\\\s\\\\S]*?<\\\\/style>/gi, ' ')\\n    .replace(/<[^>]+>/g, ' ')\\n    .replace(/\\\\s+/g, ' ')\\n    .trim();\\n\\n  // Hard cap to avoid excessive storage/token usage.\\n  const maxChars = Number($env.SCRAPED_TEXT_MAX_CHARS || 20000);\\n  if (text.length > maxChars) text = text.slice(0, maxChars);\\n\\n  const ok = text && text.length > 50;  // Require minimum text length\\n\\n  return [{\\n    json: {\\n      ...$json,\\n      scrapeOk: ok,\\n      text: ok ? text : '',\\n      __scrape_error: ok ? null : 'Text too short or empty',\\n      metadata: {\\n        url: sourceUrl,\\n        title: sourceTitle,\\n        fetchedAt: new Date().toISOString(),\\n        textLength: text.length,\\n      },\\n    }\\n  }];\\n} catch (e) {\\n  return [{\\n    json: {\\n      ...$json,\\n      scrapeOk: false,\\n      text: '',\\n      __scrape_error: e.message,\\n      metadata: { error: e.message },\\n    }\\n  }];\\n}"
+      },
+      "id": "8c5b9a01-7a9a-41ae-9304-5106c9b6d1a0",
+      "name": "12 - Normalize Scrape Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "d58bc3d7-7f7a-4dd0-960a-3b6e1d9e2bd1",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.scrapeOk }}",
+              "rightValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2b040e3f-6f0c-4f2f-a1c4-616edb39d5a1",
+      "name": "13 - Scrape OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3300,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "pointers": "/text",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "url",
+                "value": "={{ $json.metadata.url }}"
+              },
+              {
+                "name": "title",
+                "value": "={{ $json.metadata.title }}"
+              },
+              {
+                "name": "fetchedAt",
+                "value": "={{ $json.metadata.fetchedAt }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "18c0edc4-2c8d-4b60-a5c1-4d13d9f8ae8c",
+      "name": "14 - Document JSON Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentJsonInputLoader",
+      "typeVersion": 1,
+      "position": [
+        3560,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {}
+      },
+      "id": "3fd9c9b4-4c35-4e57-bb0f-1c947ce917a9",
+      "name": "15 - OpenAI Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        3560,
+        420
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "C2xU0RIH2z36pu9H",
+          "name": "OpenAi account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $env.SUPABASE_VECTOR_TABLE || 'documents' }}"
+        },
+        "queryName": "match_documents"
+      },
+      "id": "2462b5cc-f552-4763-9f26-9b26cf3d1c1b",
+      "name": "16 - Vector Store Insert (Supabase)",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabaseInsert",
+      "typeVersion": 1,
+      "position": [
+        3820,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "topK": 6,
+        "options": {
+          "queryName": "match_documents"
+        },
+        "toolName": "ResearchMemory",
+        "tableName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $env.SUPABASE_VECTOR_TABLE || 'documents' }}"
+        },
+        "toolDescription": "=Retrieve relevant research snippets from the vector store for factual grounding and competitor context."
+      },
+      "id": "d6e55541-8a52-4148-a7cf-6eb96748f0f3",
+      "name": "17 - Vector Store Tool (Supabase)",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1220,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Collapse back to a single item for downstream agents.\n// Keep only the first item's context; the vector store already holds research.\nconst item = $input.all()[0]?.json || $json;\nreturn [{\n  json: {\n    topic: item.topic,\n    language: item.language,\n    country: item.country,\n    orchestrator: item.orchestrator || item.output || {},\n  }\n}];\n"
+      },
+      "id": "1d2f4d0e-9d2b-4a08-91b9-5f6f6c14284d",
+      "name": "18 - Collapse Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4080,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"brief\": {\n    \"title\": \"\",\n    \"slug\": \"\",\n    \"seoTitle\": \"\",\n    \"metaDescription\": \"\",\n    \"outline\": [\n      {\n        \"h2\": \"\",\n        \"h3\": [\"\"],\n        \"notes\": \"\"\n      }\n    ],\n    \"faq\": [\n      {\n        \"q\": \"\",\n        \"a\": \"\"\n      }\n    ],\n    \"internalLinks\": [\"\"],\n    \"externalLinks\": [\"\"],\n    \"table\": {\n      \"caption\": \"\",\n      \"columns\": [\"\"],\n      \"rows\": [[\"\"]]\n    }\n  }\n}\n",
+        "autoFix": true,
+        "options": {}
+      },
+      "id": "0e1d06f5-faad-4fe4-b074-5aa6511c3a99",
+      "name": "20a - SEO Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        4600,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=TASK:\nYou are the SEO Strategist Agent (Worker). Build a content brief that matches search intent and will rank.\n\nINPUT:\nTopic: {{ $json.topic }}\nLanguage: {{ $json.language }}\nKeyword cluster:\n{{ JSON.stringify($json.orchestrator) }}\n\nREQUIREMENTS:\n- Use the tool ResearchMemory for grounded competitor facts and terminology.\n- Produce a full brief: title, slug, SEO title (<= 60 chars), meta description (<= 150 chars), outline with H2/H3, FAQ, 1 table spec.\n- Output JSON that matches the schema.\n\nReturn ONLY JSON.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an SEO Strategist.\nRules:\n- No fluff, no hallucinations.\n- Respect character limits strictly.\n- Use the specified language.\n- JSON only.\n"
+        }
+      },
+      "id": "b6b25d58-6af3-4315-8d7b-8b7df5b56d1a",
+      "name": "20 - SEO Strategist Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        4600,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"draft\": {\n    \"title\": \"\",\n    \"summary\": \"\",\n    \"slug\": \"\",\n    \"seoTitle\": \"\",\n    \"metaDescription\": \"\",\n    \"contentHtml\": \"\",\n    \"citations\": [\n      {\n        \"url\": \"\",\n        \"title\": \"\"\n      }\n    ]\n  }\n}\n",
+        "autoFix": true,
+        "options": {}
+      },
+      "id": "23a7aa20-73ad-4cbf-8b0d-33bb8a92b0a9",
+      "name": "21a - Writer Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        4860,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=TASK:\nYou are the Content Writer Agent (Worker). Write the full Shopify blog article in clean HTML.\n\nINPUT:\nLanguage: {{ $json.language }}\nSEO brief:\n{{ JSON.stringify($('20 - SEO Strategist Agent').item.json.output.brief) }}\n\nREQUIREMENTS:\n- Use ResearchMemory tool to ground claims.\n- Output only HTML in `contentHtml` with H2/H3 hierarchy + IDs + a table + FAQ section.\n- Provide a short summary (2-3 sentences).\n- Return citations (url + title) you relied on.\n- Output JSON that matches the schema.\n\nReturn ONLY JSON.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You write production-grade Shopify blog HTML.\nRules:\n- No markdown.\n- No external scripts.\n- Keep HTML valid.\n- JSON only.\n"
+        }
+      },
+      "id": "5f1d7df3-9a1c-4dc6-835a-bc9cce1c9d3d",
+      "name": "21 - Content Writer Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        4860,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"final\": {\n    \"title\": \"\",\n    \"summary\": \"\",\n    \"slug\": \"\",\n    \"seoTitle\": \"\",\n    \"metaDescription\": \"\",\n    \"contentHtml\": \"\",\n    \"citations\": [\n      {\n        \"url\": \"\",\n        \"title\": \"\",\n        \"note\": \"\"\n      }\n    ]\n  }\n}\n",
+        "autoFix": true,
+        "options": {}
+      },
+      "id": "bb0bf3db-84b0-450f-8cc9-14d2fbe7b1b0",
+      "name": "22a - Factcheck Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        5120,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=TASK:\nYou are the Fact-Checker Agent (Worker). Verify and clean the draft.\n\nINPUT:\nDraft JSON:\n{{ JSON.stringify($('21 - Content Writer Agent').item.json.output.draft) }}\n\nREQUIREMENTS:\n- Ensure no unverifiable claims remain.\n- If a claim is not supported by ResearchMemory, rewrite it to be accurate or remove it.\n- Ensure meta limits: SEO title <= 60 chars, meta description <= 150 chars.\n- Return final JSON matching the schema.\n\nReturn ONLY JSON.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a strict fact-checker.\nRules:\n- Prefer removing a claim over guessing.\n- Maintain readability.\n- JSON only.\n"
+        }
+      },
+      "id": "c3a8f8b1-6e19-4f73-9920-f7ad94994cb2",
+      "name": "22 - Fact-Checker Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        5120,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "sendAndWait",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $env.SLACK_APPROVAL_CHANNEL_ID || '' }}"
+        },
+        "message": "=APPROVAL REQUIRED\n\nTitle: {{ $json.output.final.title }}\nSEO Title: {{ $json.output.final.seoTitle }}\nMeta: {{ $json.output.final.metaDescription }}\nSlug: {{ $json.output.final.slug }}\n\nReply approve/reject in Slack.",
+        "options": {}
+      },
+      "id": "a4c6a8c0-6c8f-4b3c-a047-5a88cf2b5f7a",
+      "name": "30 - Slack Approval (Send & Wait)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        5380,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "1b90d3a0-8e8e-4dc0-85e8-66284f41c2d1",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d69f4f0a-13ad-4f53-8a9f-8a4c3d8ee90a",
+      "name": "31 - Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        5640,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://' + $env.SHOPIFY_STORE_DOMAIN + '/admin/api/' + ($env.SHOPIFY_API_VERSION || '2026-01') + '/graphql.json' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Shopify-Access-Token",
+              "value": "={{ $env.SHOPIFY_ADMIN_API_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"mutation CreateArticle($article: ArticleCreateInput!) { articleCreate(article: $article) { article { id title handle body summary isPublished publishedAt } userErrors { code field message } } }\",\n  \"variables\": {\n    \"article\": {\n      \"blogId\": \"{{ $env.SHOPIFY_BLOG_ID }}\",\n      \"title\": \"{{ $('22 - Fact-Checker Agent').item.json.output.final.title }}\",\n      \"handle\": \"{{ $('22 - Fact-Checker Agent').item.json.output.final.slug }}\",\n      \"body\": \"{{ $('22 - Fact-Checker Agent').item.json.output.final.contentHtml.replace(/\\\\\\\"/g, '\\\\\\\\\\\\\"').replace(/\\\\n/g, '') }}\",\n      \"summary\": \"{{ $('22 - Fact-Checker Agent').item.json.output.final.summary.replace(/\\\\\\\"/g, '\\\\\\\\\\\\\"') }}\",\n      \"isPublished\": {{ !($('02 - Normalize Input').item.json.testMode || false) }}\n    }\n  }\n}",
+        "options": {
+          "timeout": 45000
+        },
+        "continueOnFail": true
+      },
+      "id": "cd6f4c50-0c28-4e86-9a6d-4a7c4a1b3b07",
+      "name": "32 - Shopify Create Article (GraphQL)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        5900,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://' + $env.SHOPIFY_STORE_DOMAIN + '/admin/api/' + ($env.SHOPIFY_API_VERSION || '2026-01') + '/graphql.json' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Shopify-Access-Token",
+              "value": "={{ $env.SHOPIFY_ADMIN_API_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"mutation SetArticleSeo($metafields: [MetafieldsSetInput!]!) { metafieldsSet(metafields: $metafields) { metafields { id namespace key value } userErrors { field message code } } }\",\n  \"variables\": {\n    \"metafields\": [\n      {\n        \"ownerId\": \"{{ $json.data.articleCreate.article.id }}\",\n        \"namespace\": \"global\",\n        \"key\": \"title_tag\",\n        \"type\": \"single_line_text_field\",\n        \"value\": \"{{ $('22 - Fact-Checker Agent').item.json.output.final.seoTitle }}\"\n      },\n      {\n        \"ownerId\": \"{{ $json.data.articleCreate.article.id }}\",\n        \"namespace\": \"global\",\n        \"key\": \"description_tag\",\n        \"type\": \"single_line_text_field\",\n        \"value\": \"{{ $('22 - Fact-Checker Agent').item.json.output.final.metaDescription }}\"\n      }\n    ]\n  }\n}",
+        "options": {
+          "timeout": 45000
+        },
+        "continueOnFail": true
+      },
+      "id": "b9f1cbf0-7b5f-4b9a-9fd8-2e78d8ac3d8f",
+      "name": "33 - Shopify Set SEO Metafields",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6160,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "post",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $env.SLACK_APPROVAL_CHANNEL_ID || '' }}"
+        },
+        "text": "=Published: {{ $json.data.articleCreate.article.title }}\nHandle: {{ $json.data.articleCreate.article.handle }}",
+        "otherOptions": {}
+      },
+      "id": "c2e495ee-0f7b-4d25-8c79-1c3c1b4f4477",
+      "name": "34 - Slack Notify Published",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        6420,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "post",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $env.SLACK_APPROVAL_CHANNEL_ID || '' }}"
+        },
+        "text": "=Rejected. No Shopify changes were made.\nTopic: {{ $('02 - Normalize Input').item.json.topic }}",
+        "otherOptions": {}
+      },
+      "id": "2ea6d51b-98b8-42cf-9ba7-c4c3d748c8ef",
+      "name": "35 - Slack Notify Rejected",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        5900,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "responsesApiEnabled": "={{ true }}",
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "a1c4e07d-0c4a-4c2d-81fd-c4d2c0d2f0ea",
+      "name": "LLM - OpenAI Chat",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        700,
+        520
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "C2xU0RIH2z36pu9H",
+          "name": "OpenAi account 3"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "01 - Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "02 - Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 - Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "03 - Orchestrator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03 - Orchestrator Agent": {
+      "main": [
+        [
+          {
+            "node": "04 - SERPAPI Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 - SERPAPI Search": {
+      "main": [
+        [
+          {
+            "node": "05 - Prepare SERP Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05 - Prepare SERP Context": {
+      "main": [
+        [
+          {
+            "node": "06 - Researcher Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06 - Researcher Agent": {
+      "main": [
+        [
+          {
+            "node": "07 - Build Source Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07 - Build Source Items": {
+      "main": [
+        [
+          {
+            "node": "08 - Loop Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08 - Loop Sources": {
+      "main": [
+        [
+          {
+            "node": "09 - Use Firecrawl?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "18 - Collapse Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09 - Use Firecrawl?": {
+      "main": [
+        [
+          {
+            "node": "10 - Firecrawl Scrape",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "11 - Direct Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 - Firecrawl Scrape": {
+      "main": [
+        [
+          {
+            "node": "12 - Normalize Scrape Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Direct Fetch": {
+      "main": [
+        [
+          {
+            "node": "12 - Normalize Scrape Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 - Normalize Scrape Text": {
+      "main": [
+        [
+          {
+            "node": "13 - Scrape OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Scrape OK?": {
+      "main": [
+        [
+          {
+            "node": "16 - Vector Store Insert (Supabase)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "08 - Loop Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16 - Vector Store Insert (Supabase)": {
+      "main": [
+        [
+          {
+            "node": "08 - Loop Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "18 - Collapse Context": {
+      "main": [
+        [
+          {
+            "node": "20 - SEO Strategist Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "20 - SEO Strategist Agent": {
+      "main": [
+        [
+          {
+            "node": "21 - Content Writer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "21 - Content Writer Agent": {
+      "main": [
+        [
+          {
+            "node": "22 - Fact-Checker Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "22 - Fact-Checker Agent": {
+      "main": [
+        [
+          {
+            "node": "30 - Slack Approval (Send & Wait)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "30 - Slack Approval (Send & Wait)": {
+      "main": [
+        [
+          {
+            "node": "31 - Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "31 - Approved?": {
+      "main": [
+        [
+          {
+            "node": "32 - Shopify Create Article (GraphQL)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "35 - Slack Notify Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "32 - Shopify Create Article (GraphQL)": {
+      "main": [
+        [
+          {
+            "node": "33 - Shopify Set SEO Metafields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "33 - Shopify Set SEO Metafields": {
+      "main": [
+        [
+          {
+            "node": "34 - Slack Notify Published",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03a - Orchestrator Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "03 - Orchestrator Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06a - Researcher Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "06 - Researcher Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "20a - SEO Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "20 - SEO Strategist Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "21a - Writer Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "21 - Content Writer Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "22a - Factcheck Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "22 - Fact-Checker Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 - Document JSON Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "16 - Vector Store Insert (Supabase)",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15 - OpenAI Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "16 - Vector Store Insert (Supabase)",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "17 - Vector Store Tool (Supabase)",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "17 - Vector Store Tool (Supabase)": {
+      "ai_tool": [
+        [
+          {
+            "node": "20 - SEO Strategist Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "21 - Content Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "22 - Fact-Checker Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM - OpenAI Chat": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "03 - Orchestrator Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "06 - Researcher Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "20 - SEO Strategist Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "21 - Content Writer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "22 - Fact-Checker Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
