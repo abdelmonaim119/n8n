@@ -13,8 +13,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        40,
-        40
+        232,
+        180
       ]
     },
     {
@@ -28,8 +28,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        40,
-        440
+        48,
+        448
       ]
     },
     {
@@ -43,8 +43,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        40,
-        740
+        48,
+        752
       ]
     },
     {
@@ -58,7 +58,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        40,
+        48,
         1040
       ]
     },
@@ -73,8 +73,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        40,
-        1340
+        48,
+        1344
       ]
     },
     {
@@ -85,8 +85,24 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        460,
-        260
+        464,
+        380
+      ],
+      "webhookId": "39f9315a-ae8d-4c75-9eb0-5e5d117f4a6e"
+    },
+    {
+      "parameters": {
+        "content": "### 01 - Chat Trigger\\n\\nListens for user topic input via n8n chat interface. Entry point. Passes chatInput to Node 02.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 01 - Chat Trigger",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        464,
+        600
       ]
     },
     {
@@ -143,23 +159,36 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        700,
-        260
+        688,
+        380
       ]
     },
     {
       "parameters": {
-        "schemaType": "fromJson",
+        "content": "### 02 - Normalize Input\\n\\nExtracts and standardizes all parameters (topic, language, country, testMode, idempotentKey, etc). Output: normalized context.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 02 - Normalize Input",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        688,
+        600
+      ]
+    },
+    {
+      "parameters": {
         "jsonSchemaExample": "{\n  \"primaryKeyword\": \"\",\n  \"searchIntent\": \"\",\n  \"longTailKeywords\": [\"\"],\n  \"lsiKeywords\": [\"\"],\n  \"serpQuery\": \"\",\n  \"requiredSections\": {\n    \"h2Count\": 6,\n    \"h3PerH2\": 2,\n    \"includeTable\": true,\n    \"includeFaq\": true\n  },\n  \"audience\": \"\",\n  \"tone\": \"\",\n  \"constraints\": {\n    \"noHallucinations\": true,\n    \"mustCiteSources\": true\n  }\n}\n",
-        "autoFix": true,
-        "options": {}
+        "autoFix": true
       },
       "name": "03a - Orchestrator Parser",
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        960,
-        460
+        1040,
+        604
       ]
     },
     {
@@ -175,13 +204,27 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        960,
-        260
+        944,
+        380
       ]
     },
     {
       "parameters": {
-        "method": "GET",
+        "content": "### 03 - Orchestrator Agent\\n\\nLLM Agent: Expands topic into keyword cluster (primary keyword, LSI, long-tail, search intent, SERP query). Uses gpt-4o-mini at temp=0.2.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 03 - Orchestrator Agent",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        944,
+        600
+      ]
+    },
+    {
+      "parameters": {
         "url": "https://serpapi.com/search.json",
         "sendQuery": true,
         "queryParameters": {
@@ -218,15 +261,29 @@
         },
         "options": {
           "timeout": 30000
-        },
-        "continueOnFail": true
+        }
       },
       "name": "04 - SERPAPI Search",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1220,
-        260
+        1408,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 04 - SERPAPI Search\\n\\nHTTP GET call to SERPAPI. Fetches Google search results for the target keyword. Timeout: 30s.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 04 - SERPAPI Search",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        600
       ]
     },
     {
@@ -237,23 +294,36 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1480,
-        260
+        1632,
+        380
       ]
     },
     {
       "parameters": {
-        "schemaType": "fromJson",
+        "content": "### 05 - Prepare SERP Context\\n\\nValidates SERP response. Checks for errors, minimum results, filters invalid URLs. Outputs serpResults array + __serp_ok flag.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 05 - Prepare SERP Context",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        600
+      ]
+    },
+    {
+      "parameters": {
         "jsonSchemaExample": "{\n  \"selectedSources\": [\n    {\n      \"url\": \"\",\n      \"title\": \"\",\n      \"reason\": \"\"\n    }\n  ]\n}\n",
-        "autoFix": true,
-        "options": {}
+        "autoFix": true
       },
       "name": "06a - Researcher Parser",
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        1740,
-        460
+        1856,
+        604
       ]
     },
     {
@@ -269,8 +339,23 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1740,
-        260
+        1864,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 06 - Researcher Agent\\n\\nLLM Agent: Reviews SERP results and selects best N sources (maxSources) based on relevance & authority.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 06 - Researcher Agent",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1864,
+        600
       ]
     },
     {
@@ -281,33 +366,61 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2000,
-        260
+        2128,
+        368
       ]
     },
     {
       "parameters": {
-        "batchSize": 1,
+        "content": "### 07 - Build Source Items\\n\\nConverts selectedSources array into batch items for loop. Each item has sourceUrl, sourceTitle, context.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 07 - Build Source Items",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        588
+      ]
+    },
+    {
+      "parameters": {
         "options": {}
       },
       "name": "08 - Loop Sources",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        2260,
-        260
+        2336,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 08 - Loop Sources\\n\\nSplitInBatches (batch size=1): Iterates over each source sequentially. Scrapes all sources before exiting loop.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 08 - Loop Sources",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2336,
+        588
       ]
     },
     {
       "parameters": {
         "conditions": {
           "options": {
-            "version": 2,
-            "leftValue": "",
             "caseSensitive": true,
-            "typeValidation": "strict"
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
           },
-          "combinator": "and",
           "conditions": [
             {
               "id": "6b1ef4b4-5c16-4939-8d5d-3519c0f915ee",
@@ -318,7 +431,8 @@
               "leftValue": "={{ $env.FIRECRAWL_API_KEY || '' }}",
               "rightValue": ""
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
@@ -326,8 +440,23 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        2520,
-        260
+        2672,
+        136
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 09 - Use Firecrawl?\\n\\nIF FIRECRAWL_API_KEY exists: use Firecrawl (better markdown). ELSE: use Direct Fetch (raw HTML).",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 09 - Use Firecrawl?",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2672,
+        356
       ]
     },
     {
@@ -358,28 +487,56 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        2780,
-        160
+        3112,
+        136
       ],
       "continueOnFail": true
     },
     {
       "parameters": {
-        "method": "GET",
+        "content": "### 10 - Firecrawl Scrape\\n\\nHTTP POST to Firecrawl API. Extracts clean markdown from webpage. Timeout: 45s. ContinueOnFail: true.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 10 - Firecrawl Scrape",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3112,
+        356
+      ]
+    },
+    {
+      "parameters": {
         "url": "={{ $json.sourceUrl }}",
         "options": {
-          "timeout": 45000,
-          "followRedirect": true
+          "timeout": 45000
         }
       },
       "name": "11 - Direct Fetch",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        2780,
-        360
+        3112,
+        328
       ],
       "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "### 11 - Direct Fetch\\n\\nHTTP GET fallback when Firecrawl unavailable. Fetches raw HTML. Timeout: 45s. ContinueOnFail: true.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 11 - Direct Fetch",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3112,
+        548
+      ]
     },
     {
       "parameters": {
@@ -389,20 +546,34 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3040,
-        260
+        3624,
+        136
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 12 - Normalize Scrape Text\\n\\nCleans HTML: removes scripts/styles, strips tags, collapses whitespace. Caps to 20k chars. Validates min 50 chars. Outputs text + metadata.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 12 - Normalize Scrape Text",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3624,
+        356
       ]
     },
     {
       "parameters": {
         "conditions": {
           "options": {
-            "version": 2,
-            "leftValue": "",
             "caseSensitive": true,
-            "typeValidation": "strict"
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
           },
-          "combinator": "and",
           "conditions": [
             {
               "id": "d58bc3d7-7f7a-4dd0-960a-3b6e1d9e2bd1",
@@ -413,7 +584,8 @@
               "leftValue": "={{ $json.scrapeOk }}",
               "rightValue": true
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
@@ -421,8 +593,23 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        3300,
-        260
+        3992,
+        136
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 13 - Scrape OK?\\n\\nIF scrapeOk=true: store in vector DB. ELSE: skip to next loop iteration.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 13 - Scrape OK?",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3992,
+        356
       ]
     },
     {
@@ -451,21 +638,35 @@
       "type": "@n8n/n8n-nodes-langchain.documentJsonInputLoader",
       "typeVersion": 1,
       "position": [
-        3560,
-        120
+        4288,
+        352
       ]
     },
     {
       "parameters": {
-        "model": "text-embedding-3-small",
+        "content": "### 14 - Document JSON Loader\\n\\nConverts raw text into LangChain Document format with metadata (url, title, fetchedAt).",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 14 - Document JSON Loader",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4288,
+        572
+      ]
+    },
+    {
+      "parameters": {
         "options": {}
       },
       "name": "15 - OpenAI Embeddings",
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
       "position": [
-        3560,
-        420
+        4576,
+        352
       ],
       "credentials": {
         "openAiApi": {
@@ -476,42 +677,55 @@
     },
     {
       "parameters": {
+        "content": "### 15 - OpenAI Embeddings\\n\\nVectorizes documents using text-embedding-3-small (1536 dims). Cost: $0.02 per 1M tokens.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 15 - OpenAI Embeddings",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4576,
+        572
+      ]
+    },
+    {
+      "parameters": {
         "tableName": {
           "__rl": true,
           "mode": "id",
           "value": "={{ $env.SUPABASE_VECTOR_TABLE || 'documents' }}"
-        },
-        "queryName": "match_documents"
+        }
       },
       "name": "16 - Vector Store Insert (Supabase)",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabaseInsert",
       "typeVersion": 1,
       "position": [
-        3820,
-        260
+        4400,
+        128
       ]
     },
     {
       "parameters": {
         "mode": "retrieve-as-tool",
-        "topK": 6,
-        "options": {
-          "queryName": "match_documents"
-        },
-        "toolName": "ResearchMemory",
+        "toolDescription": "=Retrieve relevant research snippets from the vector store for factual grounding and competitor context.",
         "tableName": {
           "__rl": true,
           "mode": "id",
           "value": "={{ $env.SUPABASE_VECTOR_TABLE || 'documents' }}"
         },
-        "toolDescription": "=Retrieve relevant research snippets from the vector store for factual grounding and competitor context."
+        "topK": 6,
+        "options": {
+          "queryName": "match_documents"
+        }
       },
       "name": "17 - Vector Store Tool (Supabase)",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
       "typeVersion": 1.3,
       "position": [
-        1220,
-        520
+        2896,
+        848
       ]
     },
     {
@@ -522,23 +736,36 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4080,
-        260
+        2672,
+        624
       ]
     },
     {
       "parameters": {
-        "schemaType": "fromJson",
+        "content": "### 18 - Collapse Context\\n\\nAfter loop: collapses N loop items back to 1 item with topic, language, orchestrator context. Routes to SEO Strategist.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 18 - Collapse Context",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2672,
+        844
+      ]
+    },
+    {
+      "parameters": {
         "jsonSchemaExample": "{\n  \"brief\": {\n    \"title\": \"\",\n    \"slug\": \"\",\n    \"seoTitle\": \"\",\n    \"metaDescription\": \"\",\n    \"outline\": [\n      {\n        \"h2\": \"\",\n        \"h3\": [\"\"],\n        \"notes\": \"\"\n      }\n    ],\n    \"faq\": [\n      {\n        \"q\": \"\",\n        \"a\": \"\"\n      }\n    ],\n    \"internalLinks\": [\"\"],\n    \"externalLinks\": [\"\"],\n    \"table\": {\n      \"caption\": \"\",\n      \"columns\": [\"\"],\n      \"rows\": [[\"\"]]\n    }\n  }\n}\n",
-        "autoFix": true,
-        "options": {}
+        "autoFix": true
       },
       "name": "20a - SEO Parser",
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        4600,
-        460
+        3184,
+        848
       ]
     },
     {
@@ -554,28 +781,41 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        4600,
-        260
+        3048,
+        624
       ]
     },
     {
       "parameters": {
-        "schemaType": "fromJson",
+        "content": "### 20 - SEO Strategist Agent\\n\\nLLM Agent: Builds content brief (title, slug, SEO title ≤60 chars, meta desc ≤150 chars, outline, FAQ, table). Uses ResearchMemory.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 20 - SEO Strategist Agent",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3048,
+        844
+      ]
+    },
+    {
+      "parameters": {
         "jsonSchemaExample": "{\n  \"draft\": {\n    \"title\": \"\",\n    \"summary\": \"\",\n    \"slug\": \"\",\n    \"seoTitle\": \"\",\n    \"metaDescription\": \"\",\n    \"contentHtml\": \"\",\n    \"citations\": [\n      {\n        \"url\": \"\",\n        \"title\": \"\"\n      }\n    ]\n  }\n}\n",
-        "autoFix": true,
-        "options": {}
+        "autoFix": true
       },
       "name": "21a - Writer Parser",
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        4860,
-        460
+        3552,
+        848
       ]
     },
     {
       "parameters": {
-        "promptType": "define",
+        "promptType": "=define",
         "text": "=TASK:\nYou are the Content Writer Agent (Worker). Write the full Shopify blog article in clean HTML.\n\nINPUT:\nLanguage: {{ $json.language }}\nSEO brief:\n{{ JSON.stringify($('20 - SEO Strategist Agent').item.json.output.brief) }}\n\nREQUIREMENTS:\n- Use ResearchMemory tool to ground claims.\n- Output only HTML in `contentHtml` with H2/H3 hierarchy + IDs + a table + FAQ section.\n- Provide a short summary (2-3 sentences).\n- Return citations (url + title) you relied on.\n- Output JSON that matches the schema.\n\nReturn ONLY JSON.",
         "hasOutputParser": true,
         "options": {
@@ -586,23 +826,36 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        4860,
-        260
+        3560,
+        624
       ]
     },
     {
       "parameters": {
-        "schemaType": "fromJson",
+        "content": "### 21 - Content Writer Agent\\n\\nLLM Agent: Writes full Shopify blog HTML from brief. Clean HTML only (no markdown/scripts). Includes citations.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 21 - Content Writer Agent",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3560,
+        844
+      ]
+    },
+    {
+      "parameters": {
         "jsonSchemaExample": "{\n  \"final\": {\n    \"title\": \"\",\n    \"summary\": \"\",\n    \"slug\": \"\",\n    \"seoTitle\": \"\",\n    \"metaDescription\": \"\",\n    \"contentHtml\": \"\",\n    \"citations\": [\n      {\n        \"url\": \"\",\n        \"title\": \"\",\n        \"note\": \"\"\n      }\n    ]\n  }\n}\n",
-        "autoFix": true,
-        "options": {}
+        "autoFix": true
       },
       "name": "22a - Factcheck Parser",
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        5120,
-        460
+        3920,
+        848
       ]
     },
     {
@@ -618,8 +871,23 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        5120,
-        260
+        3928,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 22 - Fact-Checker Agent\\n\\nLLM Agent: Verifies draft, removes unverifiable claims, enforces character limits. Final QA before approval.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 22 - Fact-Checker Agent",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3928,
+        844
       ]
     },
     {
@@ -639,20 +907,20 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
       "position": [
-        5380,
-        260
-      ]
+        4424,
+        624
+      ],
+      "webhookId": "093d1c43-e071-4d88-a71f-3f8a2129d2fd"
     },
     {
       "parameters": {
         "conditions": {
           "options": {
-            "version": 2,
-            "leftValue": "",
             "caseSensitive": true,
-            "typeValidation": "strict"
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
           },
-          "combinator": "and",
           "conditions": [
             {
               "id": "1b90d3a0-8e8e-4dc0-85e8-66284f41c2d1",
@@ -663,7 +931,8 @@
               "leftValue": "={{ $json.data.approved }}",
               "rightValue": true
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
@@ -671,8 +940,23 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        5640,
-        260
+        4784,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 31 - Approved?\\n\\nIF approved=true: create article in Shopify. ELSE: send rejection notification.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 31 - Approved?",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4784,
+        844
       ]
     },
     {
@@ -697,15 +981,14 @@
         "jsonBody": "={\n  \"query\": \"mutation CreateArticle($article: ArticleCreateInput!) { articleCreate(article: $article) { article { id title handle body summary isPublished publishedAt } userErrors { code field message } } }\",\n  \"variables\": {\n    \"article\": {\n      \"blogId\": \"{{ $env.SHOPIFY_BLOG_ID }}\",\n      \"title\": \"{{ $('22 - Fact-Checker Agent').item.json.output.final.title }}\",\n      \"handle\": \"{{ $('22 - Fact-Checker Agent').item.json.output.final.slug }}\",\n      \"body\": \"{{ $('22 - Fact-Checker Agent').item.json.output.final.contentHtml.replace(/\\\\\\\"/g, '\\\\\\\\\\\\\"').replace(/\\\\n/g, '') }}\",\n      \"summary\": \"{{ $('22 - Fact-Checker Agent').item.json.output.final.summary.replace(/\\\\\\\"/g, '\\\\\\\\\\\\\"') }}\",\n      \"isPublished\": {{ !($('02 - Normalize Input').item.json.testMode || false) }}\n    }\n  }\n}",
         "options": {
           "timeout": 45000
-        },
-        "continueOnFail": true
+        }
       },
       "name": "32 - Shopify Create Article (GraphQL)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        5900,
-        160
+        5008,
+        624
       ]
     },
     {
@@ -730,21 +1013,34 @@
         "jsonBody": "={\n  \"query\": \"mutation SetArticleSeo($metafields: [MetafieldsSetInput!]!) { metafieldsSet(metafields: $metafields) { metafields { id namespace key value } userErrors { field message code } } }\",\n  \"variables\": {\n    \"metafields\": [\n      {\n        \"ownerId\": \"{{ $json.data.articleCreate.article.id }}\",\n        \"namespace\": \"global\",\n        \"key\": \"title_tag\",\n        \"type\": \"single_line_text_field\",\n        \"value\": \"{{ $('22 - Fact-Checker Agent').item.json.output.final.seoTitle }}\"\n      },\n      {\n        \"ownerId\": \"{{ $json.data.articleCreate.article.id }}\",\n        \"namespace\": \"global\",\n        \"key\": \"description_tag\",\n        \"type\": \"single_line_text_field\",\n        \"value\": \"{{ $('22 - Fact-Checker Agent').item.json.output.final.metaDescription }}\"\n      }\n    ]\n  }\n}",
         "options": {
           "timeout": 45000
-        },
-        "continueOnFail": true
+        }
       },
       "name": "33 - Shopify Set SEO Metafields",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        6160,
-        160
+        5232,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 33 - Shopify Set SEO Metafields\\n\\nGraphQL mutation: Attaches SEO metafields (title_tag, description_tag) to created article.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 33 - Shopify Set SEO Metafields",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5232,
+        844
       ]
     },
     {
       "parameters": {
         "authentication": "oAuth2",
-        "operation": "post",
         "select": "channel",
         "channelId": {
           "__rl": true,
@@ -758,14 +1054,29 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
       "position": [
-        6420,
-        160
+        5456,
+        624
+      ],
+      "webhookId": "26da2217-d1cd-4efd-9f0c-9deb907c4438"
+    },
+    {
+      "parameters": {
+        "content": "### 34 - Slack Notify Published\\n\\nSends success notification: article title + handle published in Shopify.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 34 - Slack Notify Published",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5456,
+        844
       ]
     },
     {
       "parameters": {
         "authentication": "oAuth2",
-        "operation": "post",
         "select": "channel",
         "channelId": {
           "__rl": true,
@@ -779,8 +1090,24 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
       "position": [
-        5900,
-        360
+        5008,
+        816
+      ],
+      "webhookId": "83026861-71ca-481b-bd9a-28d07527d789"
+    },
+    {
+      "parameters": {
+        "content": "### 35 - Slack Notify Rejected\\n\\nSends rejection notification. No article created. Workflow ends.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - 35 - Slack Notify Rejected",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5008,
+        1036
       ]
     },
     {
@@ -800,8 +1127,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        700,
-        520
+        3104,
+        1616
       ],
       "credentials": {
         "openAiApi": {
@@ -809,6 +1136,21 @@
           "name": "OpenAi account 3"
         }
       }
+    },
+    {
+      "parameters": {
+        "content": "### LLM - OpenAI Chat\\n\\nCentral LLM instance (gpt-4o-mini, temp=0.2) shared by all 5 agents: Orchestrator, Researcher, SEO Strategist, Writer, Fact-Checker.",
+        "height": 140,
+        "width": 340,
+        "color": 2
+      },
+      "name": "Note - LLM - OpenAI Chat",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3104,
+        1836
+      ]
     }
   ],
   "connections": {
