@@ -1,0 +1,170 @@
+{
+  "id": "0hEjVlD2zNuo4vBA",
+  "name": "Notify - Telegram - Daily CRM Follow-ups (Sheets)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 8,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "name": "Daily 08:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "sheetId": "1lYI7nzdRwOsjfz8AyPGHqP5u-aQV142DeNBuMFbdTL8",
+        "range": "CRM!A:S",
+        "keyRow": 0,
+        "dataStartRow": 1,
+        "options": {}
+      },
+      "name": "Read CRM (A:S)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const { DateTime } = require('luxon');\n\nconst ZONE = 'Africa/Algiers';\nconst today = DateTime.now().setZone(ZONE).toISODate();\n\nconst STATUS_ORDER = ['Negotiation', 'Contacted', 'Lead', 'Won', 'Lost'];\n\nfunction normPhone(v) {\n  if (!v) return '';\n  let s = String(v).trim();\n  s = s.replace(/[\\s\\-()]/g, '');\n  if (s.startsWith('+')) return s;\n  if (s.startsWith('213')) return '+' + s;\n  if (s.startsWith('0')) return '+213' + s.slice(1);\n  if (/^\\d{9}$/.test(s)) return '+213' + s;\n  return s;\n}\n\nfunction normDate(v) {\n  if (!v) return '';\n  const s = String(v).trim();\n  if (/^\\d{4}-\\d{2}-\\d{2}$/.test(s)) return s;\n  const iso = DateTime.fromISO(s, { zone: ZONE });\n  if (iso.isValid) return iso.toISODate();\n  const f1 = DateTime.fromFormat(s, 'M/d/yyyy', { zone: ZONE });\n  if (f1.isValid) return f1.toISODate();\n  const f2 = DateTime.fromFormat(s, 'd/M/yyyy', { zone: ZONE });\n  if (f2.isValid) return f2.toISODate();\n  return s;\n}\n\nconst matches = [];\nfor (const item of items) {\n  const row = item.json || {};\n  const next = normDate(row.NextContactDate);\n  if (next !== today) continue;\n\n  const status = (row.Status || 'Lead').toString().trim() || 'Lead';\n  matches.push({\n    status,\n    client: (row.ClientName || '').toString().trim(),\n    phone: normPhone(row.Phone),\n    product: (row.ProductService || '').toString().trim(),\n    notes: (row.Notes || '').toString().trim(),\n  });\n}\n\nif (!matches.length) {\n  return [{ json: { count: 0, message: '' } }];\n}\n\nconst byStatus = new Map();\nfor (const m of matches) {\n  const key = STATUS_ORDER.includes(m.status) ? m.status : 'Lead';\n  if (!byStatus.has(key)) byStatus.set(key, []);\n  byStatus.get(key).push(m);\n}\n\nlet out = `Sales follow-ups for ${today}\\n`;\nfor (const st of STATUS_ORDER) {\n  const rows = byStatus.get(st) || [];\n  if (!rows.length) continue;\n  out += `\\n[${st}]\\n`;\n  for (const r of rows) {\n    const parts = [r.client, r.phone, r.product, r.notes].filter(Boolean);\n    out += parts.join(' | ') + '\\n';\n  }\n}\nout += `\\nTotal: ${matches.length}`;\n\nif (out.length > 3900) {\n  out = out.slice(0, 3850) + `\\n...\\n(Truncated. Total: ${matches.length})`;\n}\n\nreturn [{ json: { count: matches.length, message: out } }];\n"
+      },
+      "name": "Build Follow-up Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.count > 0 }}",
+              "operation": "equal",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Has Follow-ups?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1020,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "CHANGE_ME",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "name": "Send Telegram Summary",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1260,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "content": "Purpose:\nSend a daily Telegram summary of CRM contacts whose NextContactDate is today.\n\nTrigger:\nSchedule Trigger daily at 08:00 (Africa/Algiers).\n\nProcess Summary:\n- Read CRM rows from Google Sheets (CRM!A:S).\n- Filter rows where NextContactDate == today.\n- Group by Status priority and format a message.\n- Send Telegram message only if there are follow-ups.\n\nOutput:\nTelegram message to the sales group with follow-ups for today (or no message if none).\n\nOwner:\nSales Ops",
+        "height": 320,
+        "width": 680,
+        "color": 7
+      },
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        60
+      ]
+    }
+  ],
+  "connections": {
+    "Daily 08:00": {
+      "main": [
+        [
+          {
+            "node": "Read CRM (A:S)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read CRM (A:S)": {
+      "main": [
+        [
+          {
+            "node": "Build Follow-up Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Follow-up Message": {
+      "main": [
+        [
+          {
+            "node": "Has Follow-ups?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Follow-ups?": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "timezone": "Africa/Algiers"
+  },
+  "tags": [],
+  "active": true,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

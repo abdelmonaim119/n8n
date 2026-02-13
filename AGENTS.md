@@ -6,7 +6,7 @@ You are a specialized AI agent for creating and editing n8n workflows.
 You manage n8n workflows as **clean, version-controlled JSON files**.
 
 ### 🌍 Context
-- **n8n Version**: 2.4.6
+- **n8n Version**: 2.7.4
 - **Source of Truth**: `@n8n-as-code/skills` tools (Deep Search + Technical Schemas)
 
 ---

@@ -1,0 +1,603 @@
+{
+  "name": "Process - Calls - Transcribe Analyze Update CRM (Sheets)",
+  "settings": {
+    "timezone": "Africa/Algiers"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nProcess a single sales call recording: transcribe + analyze it with AI, then update the matching CRM row in Google Sheets.\n\nTrigger:\nExecute Workflow Trigger (called by the call polling workflow).\n\nProcess Summary:\n- Receive call metadata (call_id, phone, recording_url, timestamp, duration).\n- Download audio recording.\n- Transcribe audio (OpenAI Whisper via HTTP Request).\n- Analyze transcript into strict JSON (OpenAI Chat Completions via HTTP Request) and compute deterministic script score.\n- Update CRM row by Phone and append to ProcessedCalls.\n- On failure: append to Errors sheet (Telegram alert node included but disabled by default).\n\nOutput:\nCRM row updated in Google Sheets and call_id appended to ProcessedCalls.\n\nOwner:\nSales Ops",
+        "height": 420,
+        "width": 720,
+        "color": 7
+      },
+      "id": "0d87e2c6-9e6b-46d8-a1d1-3109d5a36b0e",
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "call_id"
+            },
+            {
+              "name": "phone"
+            },
+            {
+              "name": "recording_url"
+            },
+            {
+              "name": "timestamp"
+            },
+            {
+              "name": "duration"
+            }
+          ]
+        }
+      },
+      "id": "4a9cceeb-9d0e-4ccf-9bb0-d08e1bbf2ed0",
+      "name": "When Executed by Poller",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -140,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const { DateTime } = require('luxon');\n\nconst ZONE = 'Africa/Algiers';\n\nfunction normPhone(v) {\n  if (!v) return '';\n  let s = String(v).trim();\n  s = s.replace(/[\\s\\-()]/g, '');\n  if (s.startsWith('+')) return s;\n  if (s.startsWith('213')) return '+' + s;\n  if (s.startsWith('0')) return '+213' + s.slice(1);\n  if (/^\\d{9}$/.test(s)) return '+213' + s;\n  return s;\n}\n\nconst first = items[0]?.json || {};\nconst call_id = String(first.call_id || '').trim();\nconst recording_url = String(first.recording_url || '').trim();\nconst phone = normPhone(first.phone);\nconst duration = Number(first.duration || 0);\nconst ts = String(first.timestamp || '').trim();\n\nconst nowIso = DateTime.now().setZone(ZONE).toISO();\nconst todayIso = DateTime.now().setZone(ZONE).toISODate();\n\nreturn [\n  {\n    json: {\n      call_id,\n      phone,\n      recording_url,\n      timestamp: ts,\n      duration,\n      now_iso: nowIso,\n      today_iso: todayIso,\n      system_version: 'v1'\n    }\n  }\n];\n"
+      },
+      "id": "0ae6b811-0a4e-4e1f-9d04-2c6d59d12fd0",
+      "name": "Normalize Inputs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ !!$json.call_id && !!$json.phone && !!$json.recording_url }}",
+              "operation": "equal",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "d2503868-c55f-477f-9a60-b5f5228a3c1d",
+      "name": "Has Required Fields?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        380,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ ($json.duration || 0) < 15 }}",
+              "operation": "equal",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "a7f0f32d-6a97-4d0b-9cfb-1a0f1c50f7dd",
+      "name": "Skip Short Call?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        640,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "GET",
+        "url": "={{ $json.recording_url }}",
+        "responseFormat": "file",
+        "dataPropertyName": "audio",
+        "jsonParameters": false,
+        "options": {
+          "timeout": 60000,
+          "followRedirect": true
+        }
+      },
+      "id": "7b9b7932-604c-43de-ae74-2f7a4c2a6d69",
+      "name": "Download Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        900,
+        260
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ !!$binary.audio && !$json.error }}",
+              "operation": "equal",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "bd728d1d-8c69-4b9b-a9ef-534fb7f19dfe",
+      "name": "Audio Downloaded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1160,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "POST",
+        "url": "https://api.openai.com/v1/audio/transcriptions",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "bodyContentType": "multipart-form-data",
+          "timeout": 180000
+        },
+        "sendBinaryData": true,
+        "binaryPropertyName": "file:audio",
+        "bodyParametersJson": "{\n  \"model\": \"whisper-1\"\n}\n",
+        "headerParametersJson": "{\n  \"Authorization\": \"Bearer CHANGE_ME_OPENAI_KEY\"\n}\n"
+      },
+      "id": "4dcdbb00-bf1c-4e52-92d4-ec6404b1c02a",
+      "name": "Transcribe (Whisper)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1420,
+        260
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const first = items[0]?.json || {};\nconst transcript = (first.text || first.transcript || first.data?.text || '').toString();\n\nconst maxChars = 12000;\nconst trimmed = transcript.length > maxChars ? transcript.slice(0, maxChars) : transcript;\n\nreturn [\n  {\n    json: {\n      ...$input.first().json,\n      transcript: trimmed,\n      transcript_truncated: transcript.length > maxChars,\n    }\n  }\n];\n"
+      },
+      "id": "63c4a9f0-033a-41c5-a799-1e6d08b7f9d6",
+      "name": "Extract Transcript",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ !!$json.transcript && $json.transcript.length > 0 }}",
+              "operation": "equal",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "8f17bdda-5a8d-4a35-ae4d-4f2c7c76471a",
+      "name": "Has Transcript?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1940,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "timeout": 180000
+        },
+        "bodyParametersJson": "={\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0.2,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a structured sales call analyzer. Extract only facts present in the transcript. Do not infer or invent information. Output valid JSON only.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Analyze the transcript and extract structured sales insights.\\n\\nReturn JSON with exactly these fields:\\n{\\n  \\\"summary\\\": \\\"max 120 words factual summary\\\",\\n  \\\"interest_level\\\": \\\"Low|Medium|High\\\",\\n  \\\"objections\\\": \\\"comma separated list or empty string\\\",\\n  \\\"next_action\\\": \\\"clear next step based only on transcript\\\",\\n  \\\"greeting_detected\\\": true/false,\\n  \\\"product_explained\\\": true/false,\\n  \\\"price_discussed\\\": true/false,\\n  \\\"objection_handled\\\": true/false,\\n  \\\"closing_attempt\\\": true/false\\n}\\n\\nTranscript:\\n\" + $json.transcript\n    }\n  ]\n}\n",
+        "headerParametersJson": "{\n  \"Authorization\": \"Bearer CHANGE_ME_OPENAI_KEY\",\n  \"Content-Type\": \"application/json\"\n}\n"
+      },
+      "id": "f56b1b07-302c-49c2-a6d1-6e1c9c6c709a",
+      "name": "Analyze Transcript (LLM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2200,
+        260
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "function bool(v) {\n  return v === true;\n}\n\nconst root = $input.first().json;\nconst content = root?.choices?.[0]?.message?.content;\n\nlet parsed;\ntry {\n  parsed = JSON.parse(content);\n} catch (e) {\n  throw new Error(`LLM output is not valid JSON. Raw: ${String(content).slice(0, 500)}`);\n}\n\nconst greeting_detected = bool(parsed.greeting_detected);\nconst product_explained = bool(parsed.product_explained);\nconst price_discussed = bool(parsed.price_discussed);\nconst objection_handled = bool(parsed.objection_handled);\nconst closing_attempt = bool(parsed.closing_attempt);\n\nconst script_score =\n  (greeting_detected ? 20 : 0) +\n  (product_explained ? 20 : 0) +\n  (price_discussed ? 20 : 0) +\n  (objection_handled ? 20 : 0) +\n  (closing_attempt ? 20 : 0);\n\nconst summary = String(parsed.summary || '').trim();\nconst interest_level = String(parsed.interest_level || '').trim();\nconst objections = String(parsed.objections || '').trim();\nconst next_action = String(parsed.next_action || '').trim();\n\nreturn [\n  {\n    json: {\n      ...$node['Extract Transcript'].json,\n      call_summary: summary,\n      interest_level,\n      objections,\n      next_action,\n      greeting_detected,\n      product_explained,\n      price_discussed,\n      objection_handled,\n      closing_attempt,\n      script_score\n    }\n  }\n];\n"
+      },
+      "id": "74af0b10-5d2b-4975-8cb7-94bedca37500",
+      "name": "Validate + Score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2460,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "update",
+        "sheetId": "1lYI7nzdRwOsjfz8AyPGHqP5u-aQV142DeNBuMFbdTL8",
+        "range": "CRM!A:S",
+        "keyRow": 0,
+        "dataStartRow": 1,
+        "key": "Phone",
+        "options": {}
+      },
+      "id": "b8dd34c2-d72a-4c9e-97a8-3a6a9a889fdb",
+      "name": "Update CRM (by Phone)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2720,
+        260
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const base = $node['Validate + Score'].json;\n\n// Map to your fixed column names in the CRM sheet.\n// The Google Sheets node matches incoming keys to header names (Key Row = 0).\nreturn [\n  {\n    json: {\n      Phone: base.phone,\n      LastCallID: base.call_id,\n      CallSummary: base.call_summary,\n      ScriptComplianceScore: base.script_score,\n      InterestLevel: base.interest_level,\n      Objections: base.objections,\n      NextAction: base.next_action,\n      LastContactDate: base.today_iso,\n      UpdatedAt: base.now_iso,\n      SystemVersion: base.system_version\n    }\n  }\n];\n"
+      },
+      "id": "2a6c9b1a-dcf1-4ad7-b0bf-c31a2c34d7b0",
+      "name": "Prepare CRM Update Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2720,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "append",
+        "sheetId": "1lYI7nzdRwOsjfz8AyPGHqP5u-aQV142DeNBuMFbdTL8",
+        "range": "ProcessedCalls!A:C",
+        "keyRow": 0,
+        "dataStartRow": 1,
+        "options": {}
+      },
+      "id": "a04a7a92-8c7c-4eb3-b3a3-70d470e8cb93",
+      "name": "Append ProcessedCalls",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2980,
+        260
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const base = $node['Validate + Score'].json;\nreturn [\n  {\n    json: {\n      call_id: base.call_id,\n      phone: base.phone,\n      processed_at: base.now_iso\n    }\n  }\n];\n"
+      },
+      "id": "d0a3025b-5557-4f7d-aee5-9bbfcb99e4f0",
+      "name": "Prepare ProcessedCalls Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2980,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "append",
+        "sheetId": "1lYI7nzdRwOsjfz8AyPGHqP5u-aQV142DeNBuMFbdTL8",
+        "range": "Errors!A:F",
+        "keyRow": 0,
+        "dataStartRow": 1,
+        "options": {}
+      },
+      "id": "f099f6cb-3c2b-4ff0-a4e2-9f6764c9f152",
+      "name": "Append Error Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        900,
+        520
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const { DateTime } = require('luxon');\nconst ZONE = 'Africa/Algiers';\n\nconst base = $input.first().json || {};\n\nfunction pickErr() {\n  if (base.error?.message) return base.error.message;\n  if (base.error?.description) return base.error.description;\n  if (typeof base.error === 'string') return base.error;\n  return '';\n}\n\nconst errMsg = pickErr() || 'Workflow error (see execution for details)';\n\nreturn [\n  {\n    json: {\n      Timestamp: DateTime.now().setZone(ZONE).toISO(),\n      WorkflowName: 'Process - Calls - Transcribe Analyze Update CRM (Sheets)',\n      EntityID: base.call_id || base.phone || '',\n      Step: base.failed_step || 'unknown',\n      ErrorMessage: errMsg,\n      PayloadSnapshot: JSON.stringify(\n        {\n          call_id: base.call_id,\n          phone: base.phone,\n          recording_url: base.recording_url,\n          timestamp: base.timestamp\n        }\n      )\n    }\n  }\n];\n"
+      },
+      "id": "f42d820a-6f4c-45bd-a4ad-2bf3c4d3f60a",
+      "name": "Build Error Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "CHANGE_ME",
+        "text": "={{ 'CRM Automation Error\\nWorkflow: Process Calls\\nEntity: ' + ($json.EntityID || '') + '\\nStep: ' + ($json.Step || '') + '\\nReason: ' + ($json.ErrorMessage || '') }}",
+        "additionalFields": {}
+      },
+      "id": "4b9e4929-2404-404d-98f6-bad8d5c4933f",
+      "name": "Telegram Alert (Disabled)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1160,
+        520
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "r3rmIDEccjFjrUOa",
+          "name": "Telegram account"
+        }
+      },
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "When Executed by Poller": {
+      "main": [
+        [
+          {
+            "node": "Normalize Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Inputs": {
+      "main": [
+        [
+          {
+            "node": "Has Required Fields?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Required Fields?": {
+      "main": [
+        [
+          {
+            "node": "Skip Short Call?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Error Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip Short Call?": {
+      "main": [
+        [
+          {
+            "node": "Download Audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Download Audio": {
+      "main": [
+        [
+          {
+            "node": "Audio Downloaded?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audio Downloaded?": {
+      "main": [
+        [
+          {
+            "node": "Transcribe (Whisper)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Error Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe (Whisper)": {
+      "main": [
+        [
+          {
+            "node": "Extract Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Transcript": {
+      "main": [
+        [
+          {
+            "node": "Has Transcript?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Transcript?": {
+      "main": [
+        [
+          {
+            "node": "Analyze Transcript (LLM)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Error Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Transcript (LLM)": {
+      "main": [
+        [
+          {
+            "node": "Validate + Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate + Score": {
+      "main": [
+        [
+          {
+            "node": "Prepare CRM Update Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare CRM Update Fields": {
+      "main": [
+        [
+          {
+            "node": "Update CRM (by Phone)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update CRM (by Phone)": {
+      "main": [
+        [
+          {
+            "node": "Prepare ProcessedCalls Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare ProcessedCalls Row": {
+      "main": [
+        [
+          {
+            "node": "Append ProcessedCalls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Error Row": {
+      "main": [
+        [
+          {
+            "node": "Append Error Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Error Row": {
+      "main": [
+        [
+          {
+            "node": "Telegram Alert (Disabled)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
+

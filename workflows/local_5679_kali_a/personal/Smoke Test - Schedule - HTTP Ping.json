@@ -1,0 +1,80 @@
+{
+  "id": "9OVzLzKMs4C8KvoJ",
+  "name": "Smoke Test - Schedule - HTTP Ping",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "name": "Every Minute",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "GET",
+        "url": "https://httpbin.org/get",
+        "responseFormat": "json",
+        "options": {}
+      },
+      "name": "HTTP Ping",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "Purpose:\nProve n8n runs scheduled workflows without human interaction by pinging an external endpoint.\n\nTrigger:\nSchedule Trigger (every 1 minute).\n\nProcess Summary:\n- Trigger every minute.\n- Make a GET request to httpbin.org.\n\nOutput:\nSuccessful executions visible in the workflow Executions list (HTTP response in node output).\n\nOwner:\nPlatform / Ops",
+        "height": 260,
+        "width": 620,
+        "color": 7
+      },
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -120,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "Every Minute": {
+      "main": [
+        [
+          {
+            "node": "HTTP Ping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": true,
+  "projectId": "AbL0oEXcD3fRF7GZ",
+  "projectName": "Personal",
+  "homeProject": {
+    "id": "AbL0oEXcD3fRF7GZ",
+    "name": "Personal",
+    "type": "personal"
+  },
+  "isArchived": false
+}

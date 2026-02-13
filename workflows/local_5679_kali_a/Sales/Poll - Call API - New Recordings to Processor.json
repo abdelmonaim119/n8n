@@ -1,0 +1,329 @@
+{
+  "name": "Poll - Call API - New Recordings to Processor",
+  "settings": {
+    "timezone": "Africa/Algiers"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Purpose:\nPoll the call recording API for new calls and dispatch each new call to the call processor workflow.\n\nTrigger:\nSchedule Trigger every 10 minutes (Africa/Algiers).\n\nProcess Summary:\n- Read last_call_timestamp from workflow static data (defaults to last 24h).\n- Call the Call Recording API for calls since that timestamp.\n- Split into batches of 5.\n- Deduplicate via ProcessedCalls sheet (lookup by call_id).\n- For new calls only: execute the processor workflow (fire-and-forget).\n- Update last_call_timestamp to newest fetched call timestamp.\n\nOutput:\nNew calls are handed off to the processor workflow for transcription + CRM update.\n\nOwner:\nSales Ops",
+        "height": 400,
+        "width": 740,
+        "color": 7
+      },
+      "id": "f9f0c0d0-928e-4870-b705-4f1de0e7a839",
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 10
+            }
+          ]
+        }
+      },
+      "id": "6d1bf3d9-5cfd-48dd-bf5a-696a237a1c2e",
+      "name": "Every 10 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -160,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const { DateTime } = require('luxon');\n\nconst ZONE = 'Africa/Algiers';\nconst sd = $getWorkflowStaticData('global');\n\nconst now = DateTime.now().setZone(ZONE);\nconst defaultFrom = now.minus({ hours: 24 }).toISO();\n\nconst fromTs = (sd.last_call_timestamp || defaultFrom).toString();\n\nreturn [{ json: { fromTs } }];\n"
+      },
+      "id": "e1712b7f-53db-4f27-a0e4-7d7f0f4144f8",
+      "name": "Load Poll State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "requestMethod": "GET",
+        "url": "={{ ($env.CALL_API_BASE_URL || 'https://api.example.com') + '/calls' }}",
+        "responseFormat": "json",
+        "jsonParameters": false,
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "X-API-Key",
+              "value": "CHANGE_ME_CALL_API_KEY"
+            }
+          ]
+        },
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "from",
+              "value": "={{ $json.fromTs }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "e9e2b8f7-9839-4a8d-8c11-8dfe6e7e3d85",
+      "name": "Fetch Calls",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        360,
+        260
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const { DateTime } = require('luxon');\n\nconst ZONE = 'Africa/Algiers';\n\nconst root = items[0]?.json || {};\n\n// Accept either {calls:[...]} or [...] or {data:[...]}.\nconst arr = Array.isArray(root) ? root : (root.calls || root.data || []);\nif (!Array.isArray(arr) || arr.length === 0) return [];\n\nlet newest = null;\nfor (const c of arr) {\n  const ts = c.timestamp || c.created_at || c.createdAt;\n  if (!ts) continue;\n  const dt = DateTime.fromISO(String(ts), { zone: ZONE });\n  if (!dt.isValid) continue;\n  if (!newest || dt > newest) newest = dt;\n}\n\nif (newest) {\n  const sd = $getWorkflowStaticData('global');\n  sd.last_call_timestamp = newest.toISO();\n}\n\nreturn arr.map((c) => ({\n  json: {\n    call_id: String(c.call_id || c.id || '').trim(),\n    phone: String(c.phone || c.client_phone || '').trim(),\n    recording_url: String(c.recording_url || c.url || '').trim(),\n    timestamp: c.timestamp || c.created_at || c.createdAt || '',\n    duration: c.duration || c.length || 0\n  }\n})).filter((i) => i.json.call_id && i.json.recording_url);\n"
+      },
+      "id": "05a2cfde-24cd-4edc-b8a1-9d88ac6f6614",
+      "name": "Normalize + Save Newest Timestamp",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "id": "ea2c72f0-2b40-4de1-9da8-b0953b2498fe",
+      "name": "Split In Batches (5)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        880,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "lookup",
+        "sheetId": "1lYI7nzdRwOsjfz8AyPGHqP5u-aQV142DeNBuMFbdTL8",
+        "range": "ProcessedCalls!A:C",
+        "keyRow": 0,
+        "dataStartRow": 1,
+        "lookupColumn": "call_id",
+        "lookupValue": "={{ $json.call_id }}",
+        "options": {
+          "continue": true
+        }
+      },
+      "id": "8a5c7f05-13c3-4f67-bd1d-c86e7b46a899",
+      "name": "Lookup ProcessedCalls",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1140,
+        260
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CNLavzV8rZPPc9vz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "cb1773bb-4cc7-4f9c-b983-015ad0e460f0",
+              "leftValue": "={{ $json.processed_at }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          }
+        },
+        "options": {}
+      },
+      "id": "8321bced-acde-4065-b678-c87b1453f66a",
+      "name": "Already Processed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1400,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": "t1jAMBugem4vG1Q1",
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "1ea0c7c4-5fd0-465c-9501-09c5cfc8b4b0",
+      "name": "Execute Processor Workflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1660,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "return [{ json: { ok: true } }];\n"
+      },
+      "id": "14d3a706-ea4f-4a32-b0bf-2750d28a2915",
+      "name": "No-op",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1660,
+        180
+      ]
+    }
+  ],
+  "connections": {
+    "Every 10 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Load Poll State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Poll State": {
+      "main": [
+        [
+          {
+            "node": "Fetch Calls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Calls": {
+      "main": [
+        [
+          {
+            "node": "Normalize + Save Newest Timestamp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize + Save Newest Timestamp": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches (5)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches (5)": {
+      "main": [
+        [
+          {
+            "node": "Lookup ProcessedCalls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup ProcessedCalls": {
+      "main": [
+        [
+          {
+            "node": "Already Processed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Processed?": {
+      "main": [
+        [
+          {
+            "node": "No-op",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Processor Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Processor Workflow": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches (5)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No-op": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches (5)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
