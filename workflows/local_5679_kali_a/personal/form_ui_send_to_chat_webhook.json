@@ -1,0 +1,115 @@
+{
+  "id": "k3yv2sE0GGwajGU0",
+  "name": "UI - Form -> Chat Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "chat-ui",
+        "formTitle": "SEO Blog Generator",
+        "formDescription": "Send a topic to the blog generator chat webhook.",
+        "formFields": {
+          "values": [
+            {
+              "fieldName": "chatInput",
+              "fieldLabel": "Topic",
+              "fieldType": "textarea",
+              "placeholder": "e.g. mitigeur de baignoire monotrou remplacement",
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "onReceived",
+        "options": {
+          "formSubmittedText": "Message received. Workflow is running."
+        }
+      },
+      "name": "01 - Form Trigger",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        240,
+        320
+      ],
+      "notesInFlow": true,
+      "notes": "Friendly UI entrypoint.\nUsers fill the form and submit.\nOutput: includes the form field `chatInput`."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "webhookUrl",
+              "name": "webhookUrl",
+              "value": "https://n8n.srv914959.hstgr.cloud/webhook/ffee1db2-3e97-44dd-a178-626c5efc5c62/chat",
+              "type": "string"
+            },
+            {
+              "id": "chatInput",
+              "name": "chatInput",
+              "value": "={{ String($json.chatInput || '').trim() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "02 - Normalize Form Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        320
+      ],
+      "notesInFlow": true,
+      "notes": "Purpose: normalize form output.\n- `chatInput`: trimmed string from the form.\n- `webhookUrl`: target webhook to call."
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "POST",
+        "url": "={{ $json.webhookUrl }}",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={\n  \"chatInput\": $json.chatInput\n}\n"
+      },
+      "name": "03 - Call Chat Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        840,
+        320
+      ],
+      "notesInFlow": true,
+      "notes": "Calls the chat webhook with a JSON body.\nBody is built as an object (not a JSON string), so quotes/newlines are safely escaped."
+    }
+  ],
+  "connections": {
+    "01 - Form Trigger": {
+      "main": [
+        [
+          {
+            "node": "02 - Normalize Form Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 - Normalize Form Data": {
+      "main": [
+        [
+          {
+            "node": "03 - Call Chat Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [],
+  "active": false,
+  "isArchived": false
+}
